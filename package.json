@@ -1,0 +1,32 @@
+{
+  "name": "vest-finance-contracts",
+  "license": "MIT",
+  "scripts": {
+    "chain": "hardhat node",
+    "test": "hardhat test",
+    "test:parallel": "mocha --require hardhat/register --recursive --parallel --timeout 10000 --exit",
+    "compile": "hardhat compile",
+    "deploy:mumbai": "hardhat clean && hardhat run --network mumbai scripts/deploy.js",
+    "deploy:polygon": "hardhat clean && hardhat run --network polygon scripts/deploy.js",
+    "accounts": "hardhat accounts",
+    "balance": "hardhat balance",
+    "generate": "hardhat generate",
+    "account": "hardhat account"
+  },
+  "dependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.2",
+    "@nomiclabs/hardhat-etherscan": "^2.1.4",
+    "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "@openzeppelin/contracts": "^4.1.0",
+    "chai": "^4.3.4",
+    "chalk": "^4.1.2",
+    "dotenv": "^10.0.0",
+    "ethereum-waffle": "^3.3.0",
+    "ethers": "^5.1.4",
+    "hardhat": "^2.4.0",
+    "hardhat-contract-sizer": "^2.0.3",
+    "hardhat-gas-reporter": "^1.0.4",
+    "mocha": "^9.0.2",
+    "progress": "^2.0.3"
+  }
+}
