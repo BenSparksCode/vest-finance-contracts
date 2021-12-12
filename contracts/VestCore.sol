@@ -15,7 +15,10 @@ contract VestCore is Ownable {
 	uint256 public constant SCALE = 1e18;
 	uint25 public fee = 1e15; // 0.1% fee
 
-	struct VestingToken {
+	uint256 vTokenCount = 0;
+
+	// VToken = Vesting Token
+	struct VToken {
 		address token;
 		address[] recipients;
 		uint256[] amounts;
@@ -23,21 +26,38 @@ contract VestCore is Ownable {
 		uint256[] endTimes;
 	}
 
-	mapping(uint256 => VestingToken) private vestingTokens;
-	// isAdminOfVestingToken[account][vestingTokenId] = true/false
-	mapping(address => mapping(uint256 => bool)) private isAdminOfVestingToken;
+	mapping(uint256 => VToken) private vTokens;
+	// isAdminOfVToken[account][vTokenId] = true/false
+	mapping(address => mapping(uint256 => bool)) private isAdminOfVToken;
 
 	constructor() {}
 
 	// TODO better name?
 	function createVestingAgreement(
 		address _token,
-		address[] _recipients,
+		uint256 _totalAmount,
 		uint256[] _amounts,
+		address[] _recipients,
 		uint256[] _startTimes,
 		uint256[] _endTimes
 	) returns (bool success) {
+		require(_token != address(0));
+		require(_totalAmount > 0);
+		require(_recipients.length == _amounts.length);
+		require(_recipients.length == _startTimes.length);
+		require(_recipients.length == _endTimes.length);
+
+		VestingToken memory vToken = VestingToken(_token, _recipients, _amounts, _startTimes, _endTimes);
+
+		vTokenCount++;
+
+		vestingTokens[vTokenCount] = vToken;
+
+		// TODO pull in totalAmount of tokens, take fee here
+
 		// TODO
 		return true;
 	}
+
+	// TODO if error in start/end times, all tokens withdrawable
 }
