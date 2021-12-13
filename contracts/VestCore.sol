@@ -19,8 +19,9 @@ import './VestERC20.sol';
 contract VestCore is Ownable {
 	uint256 public constant SCALE = 1e18;
 	uint256 public fee = 1e15; // 0.1% fee
+	uint256 public vBoxCount = 0;
 
-	uint256 vBoxCount = 0;
+	address public ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
 	// Stores all properties of a vesting agreement
 	// vBox for short in var naming
@@ -139,12 +140,21 @@ contract VestCore is Ownable {
 	//           ONLY OWNER FUNCTIONS             //
 	// ------------------------------------------ //
 
-	function withdrawFees(
+	function withdrawTokenFees(
 		address _token,
 		uint256 _amount,
 		address _to
 	) public onlyOwner {
-		// TODO
+		require(tokenFeesEarned[_token] >= _amount, 'VEST: AMOUNT TOO HIGH');
+		tokenFeesEarned[_token] -= _amount;
+		IERC20(_token).transfer(_to, _amount);
+	}
+
+	function withdrawETHFees(uint256 _amount, address _to) public onlyOwner {
+		require(address(this).balance >= _amount, 'VEST: AMOUNT TOO HIGH');
+		tokenFeesEarned[ETH] -= _amount;
+		(bool sent, ) = _to.call{ value: _amount }('');
+		require(sent, 'VEST: ETH TRANSFER FAILED');
 	}
 
 	// ------------------------------------------ //
