@@ -4,11 +4,14 @@ pragma solidity 0.8.10;
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 
-// ------------------------------------------ //
-//                VestCore v0.1               //
+import './VestERC20.sol';
+
+// ------------------------------------------- //
+//             🦺 VestCore v0.1 🦺             //
 // ------------------------------------------ //
 
 // TODO Natspec all functions
+// TODO make sure all vars are used efficiently (mappings vs arrays)
 
 /**
     @title VestCore
@@ -25,11 +28,24 @@ contract VestCore is Ownable {
 		address token;
 		address[] recipients;
 		uint256[] amounts;
+		uint256[] withdrawn;
 		uint256[] startTimes;
 		uint256[] endTimes;
 	}
 
+	// For mapping account => VestingBox data to avoid arrays
+	struct VestingBoxAccount {
+		uint256 amount;
+		uint256 withdrawn;
+		uint256 startTime;
+		uint256 endTime;
+	}
+
+	// For storing entire vBox data per vBox ID
 	mapping(uint256 => VestingBox) private vBoxes;
+	// For looking up specific account's data within vBox of given ID
+	// vBoxID => account => VestingBoxAccount
+	mapping(uint256 => mapping(address => VestingBoxAccount)) private vBoxAccounts;
 	// isAdminOfVBox[account][vBoxId] = true/false
 	mapping(address => mapping(uint256 => bool)) private isAdminOfVBox;
 
@@ -57,13 +73,25 @@ contract VestCore is Ownable {
 		uint256[] calldata _startTimes,
 		uint256[] calldata _endTimes
 	) public returns (bool success) {
-		require(_token != address(0));
-		require(_totalAmount > 0);
-		require(_recipients.length == _amounts.length);
-		require(_recipients.length == _startTimes.length);
-		require(_recipients.length == _endTimes.length);
+		// TODO revert msgs
+		uint256 arrayLength = _recipients.length;
+		require(_token != address(0), 'VEST: ZERO ADDR NOT TOKEN');
+		require(_totalAmount > 0, 'VEST:');
+		require(arrayLength > 0, 'VEST:');
+		require(arrayLength == _amounts.length, 'VEST:');
+		require(arrayLength == _startTimes.length, 'VEST:');
+		require(arrayLength == _endTimes.length, 'VEST:');
 
-		VestingBox memory vBox = VestingBox(_token, _recipients, _amounts, _startTimes, _endTimes);
+		VestingBox memory vBox = VestingBox(
+			_token,
+			_recipients,
+			_amounts,
+			new uint256[](arrayLength), //withdrawn
+			_startTimes,
+			_endTimes
+		);
+
+		for (uint256 i = 0; i < arrayLength; i++) {}
 
 		vBoxCount++;
 
@@ -75,23 +103,23 @@ contract VestCore is Ownable {
 		return true;
 	}
 
-	function createVestingBoxWithNewToken(
-		address _token,
-		uint256 _totalAmount,
-		uint256[] calldata _amounts,
-		address[] calldata _recipients,
-		uint256[] calldata _startTimes,
-		uint256[] calldata _endTimes
-	) public returns (bool success) {
-		// TODO
-		return true;
-	}
+	// function createVestingBoxWithNewToken(
+	// 	address _token,
+	// 	uint256 _totalAmount,
+	// 	uint256[] calldata _amounts,
+	// 	address[] calldata _recipients,
+	// 	uint256[] calldata _startTimes,
+	// 	uint256[] calldata _endTimes
+	// ) public returns (bool success) {
+	// 	// TODO
+	// 	return true;
+	// }
 
 	// TODO
-	function createVestingBoxWithETH() public returns (bool success) {
-		// TODO
-		return true;
-	}
+	// function createVestingBoxWithETH() public returns (bool success) {
+	// 	// TODO
+	// 	return true;
+	// }
 
 	// TODO if error in start/end times, all tokens withdrawable
 
@@ -100,14 +128,14 @@ contract VestCore is Ownable {
 	// ------------------------------------------ //
 
 	// TODO
-	function _createVestingBox() internal returns (bool success) {
-		vBoxCount++;
-		// TODO
+	// function _createVestingBox() internal returns (bool success) {
+	// 	vBoxCount++;
+	// 	// TODO
 
-		emit VestingBoxCreated(vBoxCount, _token, msg.sender);
+	// 	emit VestingBoxCreated(vBoxCount, _token, msg.sender);
 
-		return true;
-	}
+	// 	return true;
+	// }
 
 	function _createERC20() internal returns (bool success) {
 		// TODO
@@ -133,4 +161,9 @@ contract VestCore is Ownable {
 	// ------------------------------------------ //
 	//                MODIFIERS                   //
 	// ------------------------------------------ //
+
+	modifier hasVestedAmountInBox(address _account) {
+		// TODO
+		_;
+	}
 }
