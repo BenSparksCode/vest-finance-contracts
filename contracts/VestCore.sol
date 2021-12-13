@@ -109,6 +109,16 @@ contract VestCore is Ownable {
 		return true;
 	}
 
+	function _createERC20() internal returns (bool success) {
+		// TODO
+
+		// deploy token (no owner)
+		// in constructor, mint total vesting amount to Core
+		// all recipients can recover amounts from Core
+
+		return true;
+	}
+
 	// ------------------------------------------ //
 	//             VIEW FUNCTIONS                 //
 	// ------------------------------------------ //
