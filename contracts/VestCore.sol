@@ -46,6 +46,8 @@ contract VestCore is Ownable {
 	// For looking up specific account's data within vBox of given ID
 	// vBoxID => account => VestingBoxAccount
 	mapping(uint256 => mapping(address => VestingBoxAccount)) private vBoxAccounts;
+	// For all fees earned across all tokens
+	mapping(address => uint256) private tokenFeesEarned;
 	// isAdminOfVBox[account][vBoxId] = true/false
 	mapping(address => mapping(uint256 => bool)) private isAdminOfVBox;
 
@@ -68,19 +70,28 @@ contract VestCore is Ownable {
 	function createVestingBoxWithExistingToken(
 		address _token,
 		uint256 _totalAmount,
-		uint256[] calldata _amounts,
 		address[] calldata _recipients,
+		uint256[] calldata _amounts,
 		uint256[] calldata _startTimes,
 		uint256[] calldata _endTimes
 	) public returns (bool success) {
-		// TODO revert msgs
 		uint256 arrayLength = _recipients.length;
 		require(_token != address(0), 'VEST: ZERO ADDR NOT TOKEN');
-		require(_totalAmount > 0, 'VEST:');
-		require(arrayLength > 0, 'VEST:');
-		require(arrayLength == _amounts.length, 'VEST:');
-		require(arrayLength == _startTimes.length, 'VEST:');
-		require(arrayLength == _endTimes.length, 'VEST:');
+		require(_totalAmount > 0, 'VEST: CANNOT VEST 0 AMOUNT');
+		require(arrayLength > 0, 'VEST: NO RECIPIENTS');
+		require(arrayLength == _amounts.length, 'VEST: WRONG AMOUNTS ARRAY LENGTH');
+		require(arrayLength == _startTimes.length, 'VEST: WRONG START TIMES LENGTH');
+		require(arrayLength == _endTimes.length, 'VEST: WRONG END TIMES LENGTH');
+
+		uint256 amountsSum = 0;
+		for (uint256 i = 0; i < arrayLength; i++) {
+			amountsSum += _amounts[i];
+		}
+
+		require(amountsSum == _totalAmount, 'VEST: AMOUNTS DONT SUM TO TOTAL');
+
+		// transfer tokens to be vested from msg.sender to Core
+		require(IERC20(_token).transferFrom(msg.sender, address(this), _totalAmount), 'VEST: TOKEN TRANSFER FAILED');
 
 		VestingBox memory vBox = VestingBox(
 			_token,
@@ -91,15 +102,14 @@ contract VestCore is Ownable {
 			_endTimes
 		);
 
-		for (uint256 i = 0; i < arrayLength; i++) {}
-
 		vBoxCount++;
 
 		vBoxes[vBoxCount] = vBox;
 
-		// TODO pull in totalAmount of tokens, take fee here
+		for (uint256 i = 0; i < arrayLength; i++) {
+			vBoxAccounts[vBoxCount][_recipients[i]] = VestingBoxAccount(_amounts[i], 0, _startTimes[i], _endTimes[i]);
+		}
 
-		// TODO
 		return true;
 	}
 
@@ -123,8 +133,22 @@ contract VestCore is Ownable {
 
 	// TODO if error in start/end times, all tokens withdrawable
 
+	// TODO function addRecipientToVestingBox() - deposit more tokens and add a new person
+
 	// ------------------------------------------ //
-	//           INTERNAL FUNCTIONS               //
+	//           ONLY OWNER FUNCTIONS             //
+	// ------------------------------------------ //
+
+	function withdrawFees(
+		address _token,
+		uint256 _amount,
+		address _to
+	) public onlyOwner {
+		// TODO
+	}
+
+	// ------------------------------------------ //
+	//            INTERNAL FUNCTIONS              //
 	// ------------------------------------------ //
 
 	// TODO
@@ -156,6 +180,10 @@ contract VestCore is Ownable {
 		require(_vestingBoxId <= vBoxCount);
 
 		return vBoxes[_vestingBoxId];
+	}
+
+	function getProtocolFeesEarned(address _token) public view returns (uint256) {
+		return tokenFeesEarned[_token];
 	}
 
 	// ------------------------------------------ //
