@@ -49,8 +49,8 @@ contract VestCore is Ownable {
 	mapping(uint256 => mapping(address => VestingBoxAccount)) private vBoxAccounts;
 	// For all fees earned across all tokens
 	mapping(address => uint256) private tokenFeesEarned;
-	// isAdminOfVBox[account][vBoxId] = true/false
-	mapping(address => mapping(uint256 => bool)) private isAdminOfVBox;
+	// isAdminOfVBox[vBoxId][account] = true/false
+	mapping(uint256 => mapping(address => bool)) private isAdminOfVBox;
 
 	// ------------------------------------------ //
 	//                  EVENTS                    //
@@ -196,12 +196,29 @@ contract VestCore is Ownable {
 		return tokenFeesEarned[_token];
 	}
 
+	function getAmountVested(address _account, uint256 _vBoxId) public view returns (uint256) {
+		if (block.timestamp >= vBoxAccounts[_vBoxId][_account].endTime) {
+			return vBoxAccounts[_vBoxId][_account].amount - vBoxAccounts[_vBoxId][_account].withdrawn;
+		}
+
+		uint256 vestedTime = block.timestamp - vBoxAccounts[_vBoxId][_account].startTime;
+		uint256 totalTime = vBoxAccounts[_vBoxId][_account].endTime - vBoxAccounts[_vBoxId][_account].startTime;
+		uint256 vestedAmount = (vBoxAccounts[_vBoxId][_account].amount * vestedTime * SCALE) / (totalTime * SCALE);
+
+		return vestedAmount - vBoxAccounts[_vBoxId][_account].withdrawn;
+	}
+
 	// ------------------------------------------ //
 	//                MODIFIERS                   //
 	// ------------------------------------------ //
 
-	modifier hasVestedAmountInBox(address _account) {
-		// TODO
+	modifier isVestingBoxAdmin(uint256 _vBoxId, address _account) {
+		require(isAdminOfVBox[_vBoxId][_account], 'VEST: NOT VBOX ADMIN');
+		_;
+	}
+
+	modifier hasVestedAmountInBox(uint256 _vBoxId, address _account) {
+		require(vBoxAccounts[_vBoxId][_account].amount > 0, 'VEST: NO VESTED AMOUNT');
 		_;
 	}
 }
