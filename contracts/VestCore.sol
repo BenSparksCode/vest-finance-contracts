@@ -13,7 +13,7 @@ import '@openzeppelin/contracts/access/Ownable.sol';
  */
 contract VestCore is Ownable {
 	uint256 public constant SCALE = 1e18;
-	uint25 public fee = 1e15; // 0.1% fee
+	uint256 public fee = 1e15; // 0.1% fee
 
 	uint256 vTokenCount = 0;
 
@@ -36,22 +36,22 @@ contract VestCore is Ownable {
 	function createVestingAgreement(
 		address _token,
 		uint256 _totalAmount,
-		uint256[] _amounts,
-		address[] _recipients,
-		uint256[] _startTimes,
-		uint256[] _endTimes
-	) returns (bool success) {
+		uint256[] calldata _amounts,
+		address[] calldata _recipients,
+		uint256[] calldata _startTimes,
+		uint256[] calldata _endTimes
+	) public returns (bool success) {
 		require(_token != address(0));
 		require(_totalAmount > 0);
 		require(_recipients.length == _amounts.length);
 		require(_recipients.length == _startTimes.length);
 		require(_recipients.length == _endTimes.length);
 
-		VestingToken memory vToken = VestingToken(_token, _recipients, _amounts, _startTimes, _endTimes);
+		VToken memory vToken = VToken(_token, _recipients, _amounts, _startTimes, _endTimes);
 
 		vTokenCount++;
 
-		vestingTokens[vTokenCount] = vToken;
+		vTokens[vTokenCount] = vToken;
 
 		// TODO pull in totalAmount of tokens, take fee here
 
