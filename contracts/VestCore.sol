@@ -37,7 +37,7 @@ contract VestCore is Ownable {
 	//                  EVENTS                    //
 	// ------------------------------------------ //
 
-	event VestingBoxCreated();
+	event VestingBoxCreated(uint256 vBoxID, address token, address creator);
 
 	// ------------------------------------------ //
 	//                CONSTRUCTOR                 //
