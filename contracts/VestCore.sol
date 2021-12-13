@@ -33,7 +33,21 @@ contract VestCore is Ownable {
 	// isAdminOfVBox[account][vBoxId] = true/false
 	mapping(address => mapping(uint256 => bool)) private isAdminOfVBox;
 
+	// ------------------------------------------ //
+	//                  EVENTS                    //
+	// ------------------------------------------ //
+
+	event VestingBoxCreated();
+
+	// ------------------------------------------ //
+	//                CONSTRUCTOR                 //
+	// ------------------------------------------ //
+
 	constructor() {}
+
+	// ------------------------------------------ //
+	//              PUBLIC FUNCTIONS              //
+	// ------------------------------------------ //
 
 	function createVestingBoxWithExistingToken(
 		address _token,
@@ -89,6 +103,9 @@ contract VestCore is Ownable {
 	function _createVestingBox() internal returns (bool success) {
 		vBoxCount++;
 		// TODO
+
+		emit VestingBoxCreated(vBoxCount, _token, msg.sender);
+
 		return true;
 	}
 
@@ -102,4 +119,8 @@ contract VestCore is Ownable {
 
 		return vBoxes[_vestingBoxId];
 	}
+
+	// ------------------------------------------ //
+	//                MODIFIERS                   //
+	// ------------------------------------------ //
 }
