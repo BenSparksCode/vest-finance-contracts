@@ -8,6 +8,8 @@ import '@openzeppelin/contracts/access/Ownable.sol';
 //                VestCore v0.1               //
 // ------------------------------------------ //
 
+// TODO Natspec all functions
+
 /**
     @title VestCore
  */
@@ -15,10 +17,11 @@ contract VestCore is Ownable {
 	uint256 public constant SCALE = 1e18;
 	uint256 public fee = 1e15; // 0.1% fee
 
-	uint256 vTokenCount = 0;
+	uint256 vBoxCount = 0;
 
-	// VToken = Vesting Token
-	struct VToken {
+	// Stores all properties of a vesting agreement
+	// vBox for short in var naming
+	struct VestingBox {
 		address token;
 		address[] recipients;
 		uint256[] amounts;
@@ -26,14 +29,13 @@ contract VestCore is Ownable {
 		uint256[] endTimes;
 	}
 
-	mapping(uint256 => VToken) private vTokens;
-	// isAdminOfVToken[account][vTokenId] = true/false
-	mapping(address => mapping(uint256 => bool)) private isAdminOfVToken;
+	mapping(uint256 => VestingBox) private vBoxes;
+	// isAdminOfVBox[account][vBoxId] = true/false
+	mapping(address => mapping(uint256 => bool)) private isAdminOfVBox;
 
 	constructor() {}
 
-	// TODO better name?
-	function createVestingAgreement(
+	function createVestingBoxWithExistingToken(
 		address _token,
 		uint256 _totalAmount,
 		uint256[] calldata _amounts,
@@ -47,11 +49,11 @@ contract VestCore is Ownable {
 		require(_recipients.length == _startTimes.length);
 		require(_recipients.length == _endTimes.length);
 
-		VToken memory vToken = VToken(_token, _recipients, _amounts, _startTimes, _endTimes);
+		VestingBox memory vBox = VestingBox(_token, _recipients, _amounts, _startTimes, _endTimes);
 
-		vTokenCount++;
+		vBoxCount++;
 
-		vTokens[vTokenCount] = vToken;
+		vBoxes[vBoxCount] = vBox;
 
 		// TODO pull in totalAmount of tokens, take fee here
 
@@ -59,5 +61,45 @@ contract VestCore is Ownable {
 		return true;
 	}
 
+	function createVestingBoxWithNewToken(
+		address _token,
+		uint256 _totalAmount,
+		uint256[] calldata _amounts,
+		address[] calldata _recipients,
+		uint256[] calldata _startTimes,
+		uint256[] calldata _endTimes
+	) public returns (bool success) {
+		// TODO
+		return true;
+	}
+
+	// TODO
+	function createVestingBoxWithETH() public returns (bool success) {
+		// TODO
+		return true;
+	}
+
 	// TODO if error in start/end times, all tokens withdrawable
+
+	// ------------------------------------------ //
+	//           INTERNAL FUNCTIONS               //
+	// ------------------------------------------ //
+
+	// TODO
+	function _createVestingBox() internal returns (bool success) {
+		vBoxCount++;
+		// TODO
+		return true;
+	}
+
+	// ------------------------------------------ //
+	//             VIEW FUNCTIONS                 //
+	// ------------------------------------------ //
+
+	function getVestingBox(uint256 _vestingBoxId) public view returns (VestingBox memory vestingBox) {
+		require(_vestingBoxId > 0);
+		require(_vestingBoxId <= vBoxCount);
+
+		return vBoxes[_vestingBoxId];
+	}
 }
