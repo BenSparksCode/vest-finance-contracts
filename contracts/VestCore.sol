@@ -47,10 +47,10 @@ contract VestCore is Ownable {
 	// For looking up specific account's data within vBox of given ID
 	// vBoxID => account => VestingBoxAccount
 	mapping(uint256 => mapping(address => VestingBoxAccount)) private vBoxAccounts;
-	// For all fees earned across all tokens
-	mapping(address => uint256) private tokenFeesEarned;
 	// isAdminOfVBox[vBoxId][account] = true/false
 	mapping(uint256 => mapping(address => bool)) private isAdminOfVBox;
+	// For all fees earned across all tokens
+	mapping(address => uint256) private tokenFeesEarned;
 
 	// ------------------------------------------ //
 	//                  EVENTS                    //
@@ -71,6 +71,7 @@ contract VestCore is Ownable {
 	function createVestingBoxWithExistingToken(
 		address _token,
 		uint256 _totalAmount,
+		address[] calldata _admins,
 		address[] calldata _recipients,
 		uint256[] calldata _amounts,
 		uint256[] calldata _startTimes,
@@ -132,12 +133,23 @@ contract VestCore is Ownable {
 	// 	return true;
 	// }
 
+	function claimVestedTokens(uint256 vBoxId, uint256 amountToClaim) public returns (bool success) {
+		// TODO
+
+		uint256 vestedAmount = getAmountVested(vBoxId, msg.sender);
+		require(amountToClaim <= vestedAmount - vBoxAccounts[],"VEST")
+
+		// TODO transfer token
+
+		success = true;
+	}
+
 	// TODO if error in start/end times, all tokens withdrawable
 
 	// TODO function addRecipientToVestingBox() - deposit more tokens and add a new person
 
 	// ------------------------------------------ //
-	//           ONLY OWNER FUNCTIONS             //
+	//           ONLY-OWNER FUNCTIONS             //
 	// ------------------------------------------ //
 
 	function withdrawTokenFees(
@@ -196,7 +208,7 @@ contract VestCore is Ownable {
 		return tokenFeesEarned[_token];
 	}
 
-	function getAmountVested(address _account, uint256 _vBoxId) public view returns (uint256) {
+	function getAmountVested(uint256 _vBoxId, address _account) public view returns (uint256) {
 		if (block.timestamp >= vBoxAccounts[_vBoxId][_account].endTime) {
 			return vBoxAccounts[_vBoxId][_account].amount - vBoxAccounts[_vBoxId][_account].withdrawn;
 		}
