@@ -20,26 +20,11 @@ const CONSTANTS = {
     teamVesting: 24000000, //  24 million
     daoTreasury: 30000000, //  30 million
   },
-  DEPLOY: {
-    SHIP: {
-      name: "SHIP",
-      symbol: "SHIP",
-      totalSupply: ethers.utils.parseUnits("100000000", "ether"), //100 million with 18 decimals
-    },
-    FERRY: {
-      annualFee: ethers.utils.parseUnits("24", "ether"), //$24 per year to start
-      maxMintedNFTs: 50000,
-      maxMembershipPeriod: 2 * 365 * 86400, // 2 years = 2 * 365 days * 86400 seconds per day
-      nftThreshold: ethers.utils.parseUnits("1", "ether"), //$1 Will cost less than $0.01 in LINK for random num
-    },
-    NFT_MINTER: {
-      vrfFee: 100000000000000,
-    },
-    TOKENS: {
-      daiApproveAmount: ethers.utils.parseUnits("30", "ether"),
-      linkToMinterAmount: 1000000000000000, // 10 * 0.0001 VRF fee
-    },
+  TEST: {
+    oneDai: ethers.utils.parseEther("1"),
+    oneMonth: 2629800,
   },
+  DEPLOY: {},
 };
 
 module.exports = {

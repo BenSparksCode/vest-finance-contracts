@@ -5,6 +5,7 @@
     "chain": "hardhat node",
     "test": "hardhat test",
     "test:parallel": "mocha --require hardhat/register --recursive --parallel --timeout 10000 --exit",
+    "test:unit": "hardhat test test/CoreUnit.test.js ",
     "compile": "hardhat compile",
     "deploy:mumbai": "hardhat clean && hardhat run --network mumbai scripts/deploy.js",
     "deploy:polygon": "hardhat clean && hardhat run --network polygon scripts/deploy.js",
