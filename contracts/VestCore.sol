@@ -26,22 +26,18 @@ contract VestCore is Ownable {
 
 	// Stores all properties of a vesting agreement
 	// vBox for short in var naming
-	// TODO remove this? Everything stored in vBoxAccounts mapping??? - Need to store token somewhere
 	struct VestingBox {
 		address token;
+		address[] admins;
 		address[] recipients;
-		uint256[] amounts;
-		uint256[] withdrawn;
-		uint256[] startTimes;
-		uint256[] endTimes;
 	}
 
 	// For mapping account => VestingBox data to avoid arrays
 	struct VestingBoxAccount {
 		uint256 amount;
 		uint256 withdrawn;
-		uint256 startTime;
-		uint256 endTime;
+		uint128 startTime;
+		uint128 endTime;
 	}
 
 	// For storing entire vBox data per vBox ID
@@ -71,53 +67,36 @@ contract VestCore is Ownable {
 	// ------------------------------------------ //
 
 	function createVestingBoxWithExistingToken(
-		address _token,
 		uint256 _totalAmount,
-		// address[] calldata _admins,
-		address[] calldata _recipients,
-		uint256[] calldata _amounts,
-		uint256[] calldata _startTimes,
-		uint256[] calldata _endTimes
+		VestingBox calldata _vBox,
+		VestingBoxAccount[] calldata _vBoxAccounts
 	) public returns (bool success) {
-		uint256 arrayLength = _recipients.length;
-		require(_token != address(0), 'VEST: ZERO ADDR NOT TOKEN');
+		require(_vBox.token != address(0), 'VEST: ZERO ADDR NOT TOKEN');
 		require(_totalAmount > 0, 'VEST: CANNOT VEST 0 AMOUNT');
-		require(arrayLength > 0, 'VEST: NO RECIPIENTS');
-		require(arrayLength == _amounts.length, 'VEST: WRONG AMOUNTS ARRAY LENGTH');
-		require(arrayLength == _startTimes.length, 'VEST: WRONG START TIMES LENGTH');
-		require(arrayLength == _endTimes.length, 'VEST: WRONG END TIMES LENGTH');
+		require(_vBox.recipients.length > 0, 'VEST: NO RECIPIENTS');
+		require(_vBox.recipients.length == _vBoxAccounts.length, 'VEST: WRONG ACCOUNTS ARRAY LEN');
 
 		uint256 amountsSum = 0;
-		for (uint256 i = 0; i < arrayLength; i++) {
-			amountsSum += _amounts[i];
+		for (uint256 i = 0; i < _vBoxAccounts.length; i++) {
+			amountsSum += _vBoxAccounts[i].amount;
 		}
 
 		require(amountsSum == _totalAmount, 'VEST: AMOUNTS DONT SUM TO TOTAL');
 
 		// transfer tokens to be vested from msg.sender to Core
-		require(IERC20(_token).transferFrom(msg.sender, address(this), _totalAmount), 'VEST: TOKEN TRANSFER FAILED');
-
-		// TODO fix: stack too deep, but remove giant VestingBox objects
-
-		// VestingBox memory vBox = VestingBox(
-		// 	_token,
-		// 	_recipients,
-		// 	_amounts,
-		// 	new uint256[](arrayLength), //withdrawn
-		// 	_startTimes,
-		// 	_endTimes
-		// );
+		require(
+			IERC20(_vBox.token).transferFrom(msg.sender, address(this), _totalAmount),
+			'VEST: TOKEN TRANSFER FAILED'
+		);
 
 		vBoxCount++;
+		vBoxes[vBoxCount] = _vBox;
 
-		// vBoxes[vBoxCount] = vBox;
-
-		for (uint256 i = 0; i < arrayLength; i++) {
-			vBoxAccounts[vBoxCount][_recipients[i]] = VestingBoxAccount(_amounts[i], 0, _startTimes[i], _endTimes[i]);
+		for (uint256 i = 0; i < _vBoxAccounts.length; i++) {
+			vBoxAccounts[vBoxCount][_vBox.recipients[i]] = _vBoxAccounts[i];
 		}
 
-		// TODO take fee here?
-		assetsHeldForVesting[_token] += _totalAmount;
+		assetsHeldForVesting[_vBox.token] += _totalAmount;
 
 		return true;
 	}
