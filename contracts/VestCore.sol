@@ -12,6 +12,7 @@ import './VestERC20.sol';
 
 // TODO Natspec all functions
 // TODO make sure all vars are used efficiently (mappings vs arrays)
+// TODO check if all return types are needed
 
 /**
     @title VestCore
@@ -72,7 +73,7 @@ contract VestCore is Ownable {
 	function createVestingBoxWithExistingToken(
 		address _token,
 		uint256 _totalAmount,
-		address[] calldata _admins,
+		// address[] calldata _admins,
 		address[] calldata _recipients,
 		uint256[] calldata _amounts,
 		uint256[] calldata _startTimes,
@@ -96,18 +97,20 @@ contract VestCore is Ownable {
 		// transfer tokens to be vested from msg.sender to Core
 		require(IERC20(_token).transferFrom(msg.sender, address(this), _totalAmount), 'VEST: TOKEN TRANSFER FAILED');
 
-		VestingBox memory vBox = VestingBox(
-			_token,
-			_recipients,
-			_amounts,
-			new uint256[](arrayLength), //withdrawn
-			_startTimes,
-			_endTimes
-		);
+		// TODO fix: stack too deep, but remove giant VestingBox objects
+
+		// VestingBox memory vBox = VestingBox(
+		// 	_token,
+		// 	_recipients,
+		// 	_amounts,
+		// 	new uint256[](arrayLength), //withdrawn
+		// 	_startTimes,
+		// 	_endTimes
+		// );
 
 		vBoxCount++;
 
-		vBoxes[vBoxCount] = vBox;
+		// vBoxes[vBoxCount] = vBox;
 
 		for (uint256 i = 0; i < arrayLength; i++) {
 			vBoxAccounts[vBoxCount][_recipients[i]] = VestingBoxAccount(_amounts[i], 0, _startTimes[i], _endTimes[i]);
@@ -138,13 +141,11 @@ contract VestCore is Ownable {
 	// }
 
 	function claimVestedTokens(uint256 _vBoxId, uint256 _amountToClaim) public returns (bool success) {
-		// TODO
-
 		// withdrawableAmount = total vested - withdrawn
-		uint256 withdrawableAmount = getWithdrawableAmount(vBoxId, msg.sender);
+		uint256 withdrawableAmount = getWithdrawableAmount(_vBoxId, msg.sender);
 		require(withdrawableAmount >= _amountToClaim, 'VEST: WITHDRAWABLE TOO LOW');
 
-		// TODO transfer token
+		// Send tokens to recipient
 		_withdrawFromVBox(_vBoxId, _amountToClaim);
 
 		return true;
@@ -200,16 +201,14 @@ contract VestCore is Ownable {
 		return true;
 	}
 
-	function _withdrawFromVBox(
-		uint256 _vBoxId,
-		uint256 _amountToWithdraw,
-		address _to
-	) internal returns (bool success) {
+	function _withdrawFromVBox(uint256 _vBoxId, uint256 _amountToWithdraw) internal returns (bool success) {
 		bool sent = false;
+		// TODO check here for withdraw limits?
+		vBoxAccounts[_vBoxId][msg.sender].withdrawn += _amountToWithdraw;
 		if (vBoxes[_vBoxId].token == ETH) {
-			(sent, ) = _to.call{ value: _amountToWithdraw }('');
+			(sent, ) = msg.sender.call{ value: _amountToWithdraw }('');
 		} else {
-			sent = IERC20(vBoxes[_vBoxId].token).transfer(_to, _amountToWithdraw);
+			sent = IERC20(vBoxes[_vBoxId].token).transfer(msg.sender, _amountToWithdraw);
 		}
 		require(sent, 'VEST: WITHDRAW FAILED');
 		return true;
