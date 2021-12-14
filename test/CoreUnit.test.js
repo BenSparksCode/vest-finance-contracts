@@ -29,20 +29,14 @@ describe("VestCore Unit Tests", function () {
   beforeEach(async () => {
     [owner, alice, bob, chad] = await ethers.getSigners();
 
-    console.log(1);
-
     ownerAddress = await owner.getAddress();
     aliceAddress = await alice.getAddress();
     bobAddress = await bob.getAddress();
     chadAddress = await chad.getAddress();
 
-    console.log(2);
-
     // Deploy core
     CoreContract = await ethers.getContractFactory("VestCore");
     CoreInstance = await CoreContract.connect(owner).deploy();
-
-    console.log(3);
 
     // Creating DAI token instance
     await hre.network.provider.request({
@@ -50,12 +44,8 @@ describe("VestCore Unit Tests", function () {
       params: [constants.POLYGON.DAI_WHALE],
     });
 
-    console.log(4);
-
     whale = await ethers.getSigner(constants.POLYGON.DAI_WHALE);
     whaleAddress = await whale.getAddress();
-
-    console.log(5);
 
     // Give whale some ETH
     await alice.sendTransaction({
@@ -80,12 +70,26 @@ describe("VestCore Unit Tests", function () {
 
   describe("createVestingBox", function () {
     it("createVestingBoxWithExistingToken - normal args", async () => {
-      const vBox = {};
-      const vBoxAccounts = [];
+      const totalAmount = ethers.utils.parseEther("50");
+      const vBox = {
+        token: constants.POLYGON.DAI,
+        admins: [aliceAddress],
+        recipients: [bobAddress],
+      };
+      const vBoxAccounts = [
+        {
+          amount: ethers.utils.parseEther("50"),
+          withdrawn: 0,
+          startTime: startTime,
+          endTime: endTime,
+        },
+      ];
 
-      //   await CoreInstance.connect(alice).createVestingBox(
-
-      //   );
+      await CoreInstance.connect(alice).createVestingBoxWithExistingToken(
+        totalAmount,
+        vBox,
+        vBoxAccounts
+      );
     });
   });
 });
