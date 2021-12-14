@@ -25,6 +25,7 @@ contract VestCore is Ownable {
 
 	// Stores all properties of a vesting agreement
 	// vBox for short in var naming
+	// TODO remove this? Everything stored in vBoxAccounts mapping??? - Need to store token somewhere
 	struct VestingBox {
 		address token;
 		address[] recipients;
@@ -136,13 +137,15 @@ contract VestCore is Ownable {
 	// 	return true;
 	// }
 
-	function claimVestedTokens(uint256 vBoxId, uint256 amountToClaim) public returns (bool success) {
+	function claimVestedTokens(uint256 _vBoxId, uint256 _amountToClaim) public returns (bool success) {
 		// TODO
 
-		uint256 vestedAmount = getAmountVested(vBoxId, msg.sender);
-		require(amountToClaim <= vestedAmount - vBoxAccounts[], 'VEST');
+		// withdrawableAmount = total vested - withdrawn
+		uint256 withdrawableAmount = getWithdrawableAmount(vBoxId, msg.sender);
+		require(withdrawableAmount >= _amountToClaim, 'VEST: WITHDRAWABLE TOO LOW');
 
 		// TODO transfer token
+		_withdrawFromVBox(_vBoxId, _amountToClaim);
 
 		return true;
 	}
@@ -197,6 +200,21 @@ contract VestCore is Ownable {
 		return true;
 	}
 
+	function _withdrawFromVBox(
+		uint256 _vBoxId,
+		uint256 _amountToWithdraw,
+		address _to
+	) internal returns (bool success) {
+		bool sent = false;
+		if (vBoxes[_vBoxId].token == ETH) {
+			(sent, ) = _to.call{ value: _amountToWithdraw }('');
+		} else {
+			sent = IERC20(vBoxes[_vBoxId].token).transfer(_to, _amountToWithdraw);
+		}
+		require(sent, 'VEST: WITHDRAW FAILED');
+		return true;
+	}
+
 	// ------------------------------------------ //
 	//             VIEW FUNCTIONS                 //
 	// ------------------------------------------ //
@@ -217,7 +235,8 @@ contract VestCore is Ownable {
 		}
 	}
 
-	function getAmountVested(uint256 _vBoxId, address _account) public view returns (uint256) {
+	// returns total vested - withdrawn
+	function getWithdrawableAmount(uint256 _vBoxId, address _account) public view returns (uint256) {
 		if (block.timestamp >= vBoxAccounts[_vBoxId][_account].endTime) {
 			return vBoxAccounts[_vBoxId][_account].amount - vBoxAccounts[_vBoxId][_account].withdrawn;
 		}
