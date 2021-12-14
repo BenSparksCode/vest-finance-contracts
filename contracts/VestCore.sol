@@ -49,8 +49,8 @@ contract VestCore is Ownable {
 	mapping(uint256 => mapping(address => VestingBoxAccount)) private vBoxAccounts;
 	// isAdminOfVBox[vBoxId][account] = true/false
 	mapping(uint256 => mapping(address => bool)) private isAdminOfVBox;
-	// For all fees earned across all tokens
-	mapping(address => uint256) private tokenFeesEarned;
+	// All token and ETH balances held for vesting boxes (excl. fees)
+	mapping(address => uint256) private assetsHeldForVesting;
 
 	// ------------------------------------------ //
 	//                  EVENTS                    //
@@ -112,6 +112,9 @@ contract VestCore is Ownable {
 			vBoxAccounts[vBoxCount][_recipients[i]] = VestingBoxAccount(_amounts[i], 0, _startTimes[i], _endTimes[i]);
 		}
 
+		// TODO take fee here?
+		assetsHeldForVesting[_token] += _totalAmount;
+
 		return true;
 	}
 
@@ -137,11 +140,11 @@ contract VestCore is Ownable {
 		// TODO
 
 		uint256 vestedAmount = getAmountVested(vBoxId, msg.sender);
-		require(amountToClaim <= vestedAmount - vBoxAccounts[],"VEST")
+		require(amountToClaim <= vestedAmount - vBoxAccounts[], 'VEST');
 
 		// TODO transfer token
 
-		success = true;
+		return true;
 	}
 
 	// TODO if error in start/end times, all tokens withdrawable
@@ -157,14 +160,15 @@ contract VestCore is Ownable {
 		uint256 _amount,
 		address _to
 	) public onlyOwner {
-		require(tokenFeesEarned[_token] >= _amount, 'VEST: AMOUNT TOO HIGH');
-		tokenFeesEarned[_token] -= _amount;
+		require(
+			IERC20(_token).balanceOf(address(this)) - assetsHeldForVesting[_token] >= _amount,
+			'VEST: AMOUNT TOO HIGH'
+		);
 		IERC20(_token).transfer(_to, _amount);
 	}
 
 	function withdrawETHFees(uint256 _amount, address _to) public onlyOwner {
-		require(address(this).balance >= _amount, 'VEST: AMOUNT TOO HIGH');
-		tokenFeesEarned[ETH] -= _amount;
+		require(address(this).balance - assetsHeldForVesting[ETH] >= _amount, 'VEST: AMOUNT TOO HIGH');
 		(bool sent, ) = _to.call{ value: _amount }('');
 		require(sent, 'VEST: ETH TRANSFER FAILED');
 	}
@@ -204,8 +208,13 @@ contract VestCore is Ownable {
 		return vBoxes[_vestingBoxId];
 	}
 
+	// NOTE: Use 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE as token to get ETH fees
 	function getProtocolFeesEarned(address _token) public view returns (uint256) {
-		return tokenFeesEarned[_token];
+		if (_token == ETH) {
+			return address(this).balance - assetsHeldForVesting[ETH];
+		} else {
+			return IERC20(_token).balanceOf(address(this)) - assetsHeldForVesting[_token];
+		}
 	}
 
 	function getAmountVested(uint256 _vBoxId, address _account) public view returns (uint256) {
