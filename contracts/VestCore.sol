@@ -235,8 +235,19 @@ contract VestCore is Ownable {
 		_;
 	}
 
-	modifier hasVestedAmountInBox(uint256 _vBoxId, address _account) {
-		require(vBoxAccounts[_vBoxId][_account].amount > 0, 'VEST: NO VESTED AMOUNT');
+	modifier hasAmountInBox(uint256 _vBoxId, address _account) {
+		require(vBoxAccounts[_vBoxId][_account].amount > 0, 'VEST: NO AMOUNT IN BOX');
 		_;
 	}
+}
+
+function claimVestedTokens(uint256 _vBoxId, uint256 _amountToClaim) public returns (bool success) {
+	// withdrawableAmount = total vested - withdrawn
+	uint256 withdrawableAmount = getWithdrawableAmount(_vBoxId, msg.sender);
+	require(withdrawableAmount >= _amountToClaim, 'VEST: WITHDRAWABLE TOO LOW');
+
+	// Send tokens to recipient
+	_withdrawFromVBox(_vBoxId, _amountToClaim);
+
+	return true;
 }
