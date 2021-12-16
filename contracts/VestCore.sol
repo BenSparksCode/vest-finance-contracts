@@ -218,6 +218,11 @@ contract VestCore is Ownable {
 		}
 	}
 
+	// NOTE: Use 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE as token to get ETH held
+	function getAssetHeldForVesting(address _token) public view returns (uint256) {
+		return assetsHeldForVesting[_token];
+	}
+
 	// returns total vested - withdrawn
 	function getWithdrawableAmount(uint256 _vBoxId, address _account) public view returns (uint256) {
 		if (block.timestamp >= vBoxAccounts[_vBoxId][_account].endTime) {
