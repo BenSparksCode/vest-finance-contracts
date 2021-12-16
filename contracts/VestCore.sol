@@ -156,6 +156,11 @@ contract VestCore is Ownable {
 		require(sent, 'VEST: ETH TRANSFER FAILED');
 	}
 
+	function setFee(uint256 _fee) public onlyOwner {
+		require(_fee <= SCALE, 'VEST: FEE MUST BE < 100%');
+		fee = _fee;
+	}
+
 	// ------------------------------------------ //
 	//            INTERNAL FUNCTIONS              //
 	// ------------------------------------------ //
