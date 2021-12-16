@@ -13,6 +13,7 @@ import './VestERC20.sol';
 // TODO Natspec all functions
 // TODO make sure all vars are used efficiently (mappings vs arrays)
 // TODO check if all return types are needed
+// TODO events for everything important
 
 /**
     @title VestCore
@@ -71,34 +72,7 @@ contract VestCore is Ownable {
 		VestingBox calldata _vBox,
 		VestingBoxAccount[] calldata _vBoxAccounts
 	) public returns (bool success) {
-		require(_vBox.token != address(0), 'VEST: ZERO ADDR NOT TOKEN');
-		require(_totalAmount > 0, 'VEST: CANNOT VEST 0 AMOUNT');
-		require(_vBox.recipients.length > 0, 'VEST: NO RECIPIENTS');
-		require(_vBox.recipients.length == _vBoxAccounts.length, 'VEST: WRONG ACCOUNTS ARRAY LEN');
-
-		uint256 amountsSum = 0;
-		for (uint256 i = 0; i < _vBoxAccounts.length; i++) {
-			amountsSum += _vBoxAccounts[i].amount;
-		}
-
-		require(amountsSum == _totalAmount, 'VEST: AMOUNTS DONT SUM TO TOTAL');
-
-		// transfer tokens to be vested from msg.sender to Core
-		require(
-			IERC20(_vBox.token).transferFrom(msg.sender, address(this), _totalAmount),
-			'VEST: TOKEN TRANSFER FAILED'
-		);
-
-		vBoxCount++;
-		vBoxes[vBoxCount] = _vBox;
-
-		for (uint256 i = 0; i < _vBoxAccounts.length; i++) {
-			vBoxAccounts[vBoxCount][_vBox.recipients[i]] = _vBoxAccounts[i];
-		}
-
-		assetsHeldForVesting[_vBox.token] += _totalAmount;
-
-		return true;
+		_createVestingBox(_totalAmount, _vBox, _vBoxAccounts);
 	}
 
 	// function createVestingBoxWithNewToken(
@@ -165,22 +139,47 @@ contract VestCore is Ownable {
 	//            INTERNAL FUNCTIONS              //
 	// ------------------------------------------ //
 
-	// TODO
-	// function _createVestingBox() internal returns (bool success) {
-	// 	vBoxCount++;
-	// 	// TODO
-
-	// 	emit VestingBoxCreated(vBoxCount, _token, msg.sender);
-
-	// 	return true;
-	// }
-
 	function _createERC20() internal returns (bool success) {
 		// TODO
 
 		// deploy token (no owner)
 		// in constructor, mint total vesting amount to Core
 		// all recipients can recover amounts from Core
+
+		return true;
+	}
+
+	function _createVestingBox(
+		uint256 _totalAmount,
+		VestingBox calldata _vBox,
+		VestingBoxAccount[] calldata _vBoxAccounts
+	) internal returns (bool success) {
+		require(_vBox.token != address(0), 'VEST: ZERO ADDR NOT TOKEN');
+		require(_totalAmount > 0, 'VEST: CANNOT VEST 0 AMOUNT');
+		require(_vBox.recipients.length > 0, 'VEST: NO RECIPIENTS');
+		require(_vBox.recipients.length == _vBoxAccounts.length, 'VEST: WRONG ACCOUNTS ARRAY LEN');
+
+		uint256 amountsSum = 0;
+		for (uint256 i = 0; i < _vBoxAccounts.length; i++) {
+			amountsSum += _vBoxAccounts[i].amount;
+		}
+
+		require(amountsSum == _totalAmount, 'VEST: AMOUNTS DONT SUM TO TOTAL');
+
+		// transfer tokens to be vested from msg.sender to Core
+		require(
+			IERC20(_vBox.token).transferFrom(msg.sender, address(this), _totalAmount),
+			'VEST: TOKEN TRANSFER FAILED'
+		);
+
+		vBoxCount++;
+		vBoxes[vBoxCount] = _vBox;
+
+		for (uint256 i = 0; i < _vBoxAccounts.length; i++) {
+			vBoxAccounts[vBoxCount][_vBox.recipients[i]] = _vBoxAccounts[i];
+		}
+
+		assetsHeldForVesting[_vBox.token] += _totalAmount;
 
 		return true;
 	}
