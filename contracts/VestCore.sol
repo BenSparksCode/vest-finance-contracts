@@ -75,17 +75,17 @@ contract VestCore is Ownable {
 		_createVestingBox(_totalAmount, _vBox, _vBoxAccounts);
 	}
 
-	// function createVestingBoxWithNewToken(
-	// 	address _token,
-	// 	uint256 _totalAmount,
-	// 	uint256[] calldata _amounts,
-	// 	address[] calldata _recipients,
-	// 	uint256[] calldata _startTimes,
-	// 	uint256[] calldata _endTimes
-	// ) public returns (bool success) {
-	// 	// TODO
-	// 	return true;
-	// }
+	function createVestingBoxWithNewToken(
+		uint256 _totalAmount,
+		VestingBox calldata _vBox,
+		VestingBoxAccount[] calldata _vBoxAccounts,
+		string calldata _tokenName,
+		string calldata _tokenSymbol,
+		uint256 _tokenTotalSupply
+	) public returns (bool success) {
+		_createERC20(_tokenName, _tokenSymbol, _tokenTotalSupply);
+		_createVestingBox(_totalAmount, _vBox, _vBoxAccounts);
+	}
 
 	// TODO
 	// function createVestingBoxWithETH() public returns (bool success) {
@@ -139,7 +139,11 @@ contract VestCore is Ownable {
 	//            INTERNAL FUNCTIONS              //
 	// ------------------------------------------ //
 
-	function _createERC20() internal returns (bool success) {
+	function _createERC20(
+		string calldata _tokenName,
+		string calldata _tokenSymbol,
+		uint256 _tokenTotalSupply
+	) internal returns (bool success) {
 		// TODO
 
 		// deploy token (no owner)
