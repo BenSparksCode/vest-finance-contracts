@@ -29,8 +29,8 @@ contract VestCore is Ownable {
 	// vBox for short in var naming
 	struct VestingBox {
 		address token;
-		address[] admins;
-		address[] recipients;
+		address[] admins; // is this needed in struct? can we just use mapping?
+		address[] recipients; // same here, do we need to store the array?
 	}
 
 	// For mapping account => VestingBox data to avoid arrays
@@ -134,6 +134,35 @@ contract VestCore is Ownable {
 	function setFee(uint256 _fee) public onlyOwner {
 		require(_fee <= SCALE, 'VEST: FEE MUST BE < 100%');
 		fee = _fee;
+	}
+
+	// ------------------------------------------ //
+	//           BOX-ADMIN FUNCTIONS              //
+	// ------------------------------------------ //
+
+	// TODO check security - admins setting other admins?
+	function setVestingBoxAdmin(
+		uint256 _vBoxId,
+		address _account,
+		bool _isAdmin
+	) external onlyVestingBoxAdmin(_vBoxId, msg.sender) {
+		// TODO
+	}
+
+	function addAccountToVestingBox(
+		uint256 _vBoxId,
+		address _recipient,
+		VestingBoxAccount memory _vBoxAccount
+	) external onlyVestingBoxAdmin(_vBoxId, msg.sender) {
+		// TODO
+	}
+
+	// NOTE: sends unvested tokens back to vBox creator
+	function removeAccountFromVestingBox(uint256 _vBoxId, address _recipient)
+		external
+		onlyVestingBoxAdmin(_vBoxId, msg.sender)
+	{
+		// TODO
 	}
 
 	// ------------------------------------------ //
@@ -244,7 +273,7 @@ contract VestCore is Ownable {
 	//                MODIFIERS                   //
 	// ------------------------------------------ //
 
-	modifier isVestingBoxAdmin(uint256 _vBoxId, address _account) {
+	modifier onlyVestingBoxAdmin(uint256 _vBoxId, address _account) {
 		require(isAdminOfVBox[_vBoxId][_account], 'VEST: NOT VBOX ADMIN');
 		_;
 	}
