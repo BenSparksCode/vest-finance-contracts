@@ -65,6 +65,8 @@ contract VestCore is Ownable {
 	event FeesWithdrawn(address token, uint256 amount, address _to);
 	event FeesSet(uint256 oldFee, uint256 newFee);
 
+	event ERC20Created(address tokenAddress);
+
 	// ------------------------------------------ //
 	//                CONSTRUCTOR                 //
 	// ------------------------------------------ //
@@ -191,6 +193,8 @@ contract VestCore is Ownable {
 		// all recipients can recover amounts from Core
 
 		return address(this); //TODO change to real new address
+
+		emit ERC20Created(address(this)); // TODO fix
 	}
 
 	function _createVestingBox(
