@@ -75,15 +75,16 @@ contract VestCore is Ownable {
 		_createVestingBox(_totalAmount, _vBox, _vBoxAccounts);
 	}
 
+	// NOTE: _vBox token left blank, will be set to newly created token
 	function createVestingBoxWithNewToken(
 		uint256 _totalAmount,
-		VestingBox calldata _vBox,
-		VestingBoxAccount[] calldata _vBoxAccounts,
+		VestingBox memory _vBox,
+		VestingBoxAccount[] memory _vBoxAccounts,
 		string calldata _tokenName,
 		string calldata _tokenSymbol,
 		uint256 _tokenTotalSupply
 	) public returns (bool success) {
-		_createERC20(_tokenName, _tokenSymbol, _tokenTotalSupply);
+		_vBox.token = _createERC20(_tokenName, _tokenSymbol, _tokenTotalSupply);
 		_createVestingBox(_totalAmount, _vBox, _vBoxAccounts);
 	}
 
@@ -143,20 +144,20 @@ contract VestCore is Ownable {
 		string calldata _tokenName,
 		string calldata _tokenSymbol,
 		uint256 _tokenTotalSupply
-	) internal returns (bool success) {
+	) internal returns (address newToken) {
 		// TODO
 
 		// deploy token (no owner)
 		// in constructor, mint total vesting amount to Core
 		// all recipients can recover amounts from Core
 
-		return true;
+		return address(this); //TODO change to real new address
 	}
 
 	function _createVestingBox(
 		uint256 _totalAmount,
-		VestingBox calldata _vBox,
-		VestingBoxAccount[] calldata _vBoxAccounts
+		VestingBox memory _vBox,
+		VestingBoxAccount[] memory _vBoxAccounts
 	) internal returns (bool success) {
 		require(_vBox.token != address(0), 'VEST: ZERO ADDR NOT TOKEN');
 		require(_totalAmount > 0, 'VEST: CANNOT VEST 0 AMOUNT');
