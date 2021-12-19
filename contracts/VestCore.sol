@@ -55,7 +55,15 @@ contract VestCore is Ownable {
 	//                  EVENTS                    //
 	// ------------------------------------------ //
 
-	event VestingBoxCreated(uint256 vBoxID, address token, address creator);
+	event VestingBoxCreated(uint256 indexed vBoxID, address indexed token, address creator, uint256 totalBoxAmount);
+	event VestedTokensClaimed(uint256 indexed vBoxID, address indexed token, uint256 amountClaimed, address recipient);
+	event VestingBoxAdminSet(uint256 indexed vBoxID, address admin, bool isAdmin);
+
+	event AccountAddedToVestingBox();
+	event AccountRemovedFromVestingBox();
+
+	event FeesWithdrawn(address token, uint256 amount, address _to);
+	event FeesSet(uint256 oldFee, uint256 newFee);
 
 	// ------------------------------------------ //
 	//                CONSTRUCTOR                 //
@@ -110,8 +118,6 @@ contract VestCore is Ownable {
 	}
 
 	// TODO if error in start/end times, all tokens withdrawable
-
-	// TODO function addRecipientToVestingBox() - deposit more tokens and add a new person
 
 	// ------------------------------------------ //
 	//           ONLY-OWNER FUNCTIONS             //
