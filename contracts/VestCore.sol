@@ -69,8 +69,8 @@ contract VestCore is Ownable {
 
 	function createVestingBoxWithExistingToken(
 		uint256 _totalAmount,
-		VestingBox calldata _vBox,
-		VestingBoxAccount[] calldata _vBoxAccounts
+		VestingBox memory _vBox,
+		VestingBoxAccount[] memory _vBoxAccounts
 	) public returns (bool success) {
 		_createVestingBox(_totalAmount, _vBox, _vBoxAccounts);
 	}
@@ -89,10 +89,14 @@ contract VestCore is Ownable {
 	}
 
 	// TODO
-	// function createVestingBoxWithETH() public returns (bool success) {
-	// 	// TODO
-	// 	return true;
-	// }
+	function createVestingBoxWithETH(
+		uint256 _totalAmount,
+		VestingBox memory _vBox,
+		VestingBoxAccount[] memory _vBoxAccounts
+	) public returns (bool success) {
+		_vBox.token = ETH;
+		_createVestingBox(_totalAmount, _vBox, _vBoxAccounts);
+	}
 
 	function claimVestedTokens(uint256 _vBoxId, uint256 _amountToClaim) public returns (bool success) {
 		// withdrawableAmount = total vested - withdrawn
@@ -201,6 +205,7 @@ contract VestCore is Ownable {
 		require(amountsSum == _totalAmount, 'VEST: AMOUNTS DONT SUM TO TOTAL');
 
 		// transfer tokens to be vested from msg.sender to Core
+		// TODO add if here for dealing with ETH boxes
 		require(
 			IERC20(_vBox.token).transferFrom(msg.sender, address(this), _totalAmount),
 			'VEST: TOKEN TRANSFER FAILED'
