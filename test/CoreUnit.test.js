@@ -92,4 +92,32 @@ describe("VestCore Unit Tests", function () {
       );
     });
   });
+
+  describe("create new token", function () {
+    it.only("create new token - normal args", async () => {
+      const totalAmount = ethers.utils.parseEther("50");
+      const vBox = {
+        token: constants.POLYGON.DAI,
+        admins: [aliceAddress],
+        recipients: [bobAddress],
+      };
+      const vBoxAccounts = [
+        {
+          amount: ethers.utils.parseEther("50"),
+          withdrawn: 0,
+          startTime: startTime,
+          endTime: endTime,
+        },
+      ];
+
+      await CoreInstance.connect(alice).createVestingBoxWithNewToken(
+        totalAmount,
+        vBox,
+        vBoxAccounts,
+        "Test coin",
+        "TEST",
+        ethers.utils.parseEther("50")
+      );
+    });
+  });
 });

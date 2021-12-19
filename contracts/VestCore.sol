@@ -6,6 +6,8 @@ import '@openzeppelin/contracts/access/Ownable.sol';
 
 import './VestERC20.sol';
 
+import 'hardhat/console.sol';
+
 // ------------------------------------------- //
 //             🦺 VestCore v0.1 🦺             //
 // ------------------------------------------ //
@@ -202,6 +204,8 @@ contract VestCore is Ownable {
 		// 	addr := create2(0, add(bytecode, 0x20), mload(bytecode), salt)
 		// }
 
+		console.log(address(newToken));
+
 		emit ERC20Created(address(newToken));
 		return address(newToken);
 	}
@@ -225,6 +229,7 @@ contract VestCore is Ownable {
 
 		// transfer tokens to be vested from msg.sender to Core
 		// TODO add if here for dealing with ETH boxes
+		// TODO no transfer if new token - all already minted to Core
 		require(
 			IERC20(_vBox.token).transferFrom(msg.sender, address(this), _totalAmount),
 			'VEST: TOKEN TRANSFER FAILED'
