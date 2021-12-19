@@ -192,9 +192,18 @@ contract VestCore is Ownable {
 		// in constructor, mint total vesting amount to Core
 		// all recipients can recover amounts from Core
 
-		return address(this); //TODO change to real new address
+		VestERC20 newToken = new VestERC20(_tokenName, _tokenSymbol, _tokenTotalSupply);
 
-		emit ERC20Created(address(this)); // TODO fix
+		// salt =
+		// bytes memory bytecode = contractBytecode;
+		// address addr;
+
+		// assembly {
+		// 	addr := create2(0, add(bytecode, 0x20), mload(bytecode), salt)
+		// }
+
+		emit ERC20Created(address(newToken));
+		return address(newToken);
 	}
 
 	function _createVestingBox(
