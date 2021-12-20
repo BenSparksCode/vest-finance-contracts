@@ -4,6 +4,7 @@ pragma solidity 0.8.10;
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 
+import './interfaces/IVestERC20Factory.sol';
 import './VestERC20.sol';
 
 import 'hardhat/console.sol';
@@ -151,8 +152,8 @@ contract VestCore is Ownable {
 		fee = _fee;
 	}
 
-	function setTokenFactory(address _newFactory) external onlyOwner {
-		require(_newFactory != address(0), 'VEST: FACTORY NOT ZERO ADDRESS');
+	function setTokenFactory(IVestERC20Factory _newFactory) external onlyOwner {
+		require(address(_newFactory) != address(0), 'VEST: FACTORY NOT ZERO ADDRESS');
 		tokenFactory = _newFactory;
 	}
 
@@ -200,20 +201,12 @@ contract VestCore is Ownable {
 		// in constructor, mint total vesting amount to Core
 		// all recipients can recover amounts from Core
 
-		VestERC20 newToken = new VestERC20(_tokenName, _tokenSymbol, _tokenTotalSupply);
+		address newToken = tokenFactory.createERC20(_tokenName, _tokenSymbol, _tokenTotalSupply);
 
-		// salt =
-		// bytes memory bytecode = contractBytecode;
-		// address addr;
+		console.log(newToken);
 
-		// assembly {
-		// 	addr := create2(0, add(bytecode, 0x20), mload(bytecode), salt)
-		// }
-
-		console.log(address(newToken));
-
-		emit ERC20Created(address(newToken));
-		return address(newToken);
+		emit ERC20Created(newToken);
+		return newToken;
 	}
 
 	function _createVestingBox(

@@ -2,10 +2,10 @@
 pragma solidity 0.8.10;
 
 import '@openzeppelin/contracts/access/Ownable.sol';
-
+import './interfaces/IVestERC20Factory.sol';
 import './VestERC20.sol';
 
-contract VestERC20Factory is Ownable {
+contract VestERC20Factory is IVestERC20Factory, Ownable {
 	address public VEST_CORE;
 
 	constructor() {}
