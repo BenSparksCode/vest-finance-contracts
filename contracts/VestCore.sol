@@ -151,6 +151,11 @@ contract VestCore is Ownable {
 		fee = _fee;
 	}
 
+	function setTokenFactory(address _newFactory) external onlyOwner {
+		require(_newFactory != address(0), 'VEST: FACTORY NOT ZERO ADDRESS');
+		tokenFactory = _newFactory;
+	}
+
 	// ------------------------------------------ //
 	//           BOX-ADMIN FUNCTIONS              //
 	// ------------------------------------------ //
