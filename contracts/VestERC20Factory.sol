@@ -20,7 +20,7 @@ contract VestERC20Factory is Ownable {
 	}
 
 	function setCoreAddress(address _core) external onlyOwner {
-		require(_core != address(0), 'FACTORY: Core not address zero');
+		require(_core != address(0), 'FACTORY: CORE NOT ZERO ADDRESS');
 		VEST_CORE = _core;
 	}
 
