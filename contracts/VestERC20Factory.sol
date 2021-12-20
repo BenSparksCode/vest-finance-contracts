@@ -1,19 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity 0.8.10;
 
+import '@openzeppelin/contracts/access/Ownable.sol';
+
 import './VestERC20.sol';
 
-contract VestERC20Factory {
+contract VestERC20Factory is Ownable {
 	address public VEST_CORE;
 
-	constructor(address _core) {
-		VEST_CORE = _core;
-	}
+	constructor() {}
 
 	function createERC20() external onlyCore {}
 
-	function setCoreAddress(address _core) external onlyCore {
+	function setCoreAddress(address _core) external onlyOwner {
 		require(_core != address(0), 'FACTORY: Core not address zero');
+		VEST_CORE = _core;
 	}
 
 	modifier onlyCore() {
