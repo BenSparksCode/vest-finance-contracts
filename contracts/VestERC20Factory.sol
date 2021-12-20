@@ -12,6 +12,10 @@ contract VestERC20Factory {
 
 	function createERC20() external onlyCore {}
 
+	function setCoreAddress(address _core) external onlyCore {
+		require(_core != address(0), 'FACTORY: Core not address zero');
+	}
+
 	modifier onlyCore() {
 		require(msg.sender == VEST_CORE);
 		_;
