@@ -10,7 +10,14 @@ contract VestERC20Factory is Ownable {
 
 	constructor() {}
 
-	function createERC20() external onlyCore {}
+	function createERC20(
+		string calldata _tokenName,
+		string calldata _tokenSymbol,
+		uint256 _tokenTotalSupply
+	) external onlyCore returns (address) {
+		VestERC20 newToken = new VestERC20(_tokenName, _tokenSymbol, _tokenTotalSupply);
+		return address(newToken);
+	}
 
 	function setCoreAddress(address _core) external onlyOwner {
 		require(_core != address(0), 'FACTORY: Core not address zero');

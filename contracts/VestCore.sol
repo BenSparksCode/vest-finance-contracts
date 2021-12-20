@@ -25,6 +25,7 @@ contract VestCore is Ownable {
 	uint256 public fee = 1e15; // 0.1% fee
 	uint256 public vBoxCount = 0;
 
+	IVestERC20Factory public tokenFactory;
 	address public ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
 	// Stores all properties of a vesting agreement
