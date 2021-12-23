@@ -86,7 +86,7 @@ contract VestCore is Ownable {
 		VestingBox memory _vBox,
 		VestingBoxAccount[] memory _vBoxAccounts
 	) public returns (bool success) {
-		_createVestingBox(_totalAmount, _vBox, _vBoxAccounts);
+		_createVestingBox(_totalAmount, _vBox, _vBoxAccounts, false);
 	}
 
 	// NOTE: _vBox token left blank, will be set to newly created token
@@ -99,7 +99,7 @@ contract VestCore is Ownable {
 		uint256 _tokenTotalSupply
 	) public returns (bool success) {
 		_vBox.token = _createERC20(_tokenName, _tokenSymbol, _tokenTotalSupply);
-		_createVestingBox(_totalAmount, _vBox, _vBoxAccounts);
+		_createVestingBox(_totalAmount, _vBox, _vBoxAccounts, true);
 	}
 
 	// TODO
@@ -109,7 +109,7 @@ contract VestCore is Ownable {
 		VestingBoxAccount[] memory _vBoxAccounts
 	) public returns (bool success) {
 		_vBox.token = ETH;
-		_createVestingBox(_totalAmount, _vBox, _vBoxAccounts);
+		_createVestingBox(_totalAmount, _vBox, _vBoxAccounts, false);
 	}
 
 	function claimVestedTokens(uint256 _vBoxId, uint256 _amountToClaim) public returns (bool success) {
@@ -203,8 +203,6 @@ contract VestCore is Ownable {
 
 		address newToken = tokenFactory.createERC20(_tokenName, _tokenSymbol, _tokenTotalSupply);
 
-		console.log(newToken);
-
 		emit ERC20Created(newToken);
 		return newToken;
 	}
@@ -212,7 +210,8 @@ contract VestCore is Ownable {
 	function _createVestingBox(
 		uint256 _totalAmount,
 		VestingBox memory _vBox,
-		VestingBoxAccount[] memory _vBoxAccounts
+		VestingBoxAccount[] memory _vBoxAccounts,
+		bool _newToken
 	) internal returns (bool success) {
 		require(_vBox.token != address(0), 'VEST: ZERO ADDR NOT TOKEN');
 		require(_totalAmount > 0, 'VEST: CANNOT VEST 0 AMOUNT');
@@ -226,13 +225,13 @@ contract VestCore is Ownable {
 
 		require(amountsSum == _totalAmount, 'VEST: AMOUNTS DONT SUM TO TOTAL');
 
-		// transfer tokens to be vested from msg.sender to Core
-		// TODO add if here for dealing with ETH boxes
-		// TODO no transfer if new token - all already minted to Core
-		require(
-			IERC20(_vBox.token).transferFrom(msg.sender, address(this), _totalAmount),
-			'VEST: TOKEN TRANSFER FAILED'
-		);
+		// Only pull tokens if not ETH box and not new token (new tokens get minted to core on creation)
+		if (_vBox.token != ETH && !_newToken) {
+			require(
+				IERC20(_vBox.token).transferFrom(msg.sender, address(this), _totalAmount),
+				'VEST: TOKEN TRANSFER FAILED'
+			);
+		}
 
 		vBoxCount++;
 		vBoxes[vBoxCount] = _vBox;

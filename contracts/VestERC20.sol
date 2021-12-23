@@ -7,8 +7,9 @@ contract VestERC20 is BaseERC20 {
 	constructor(
 		string memory _name,
 		string memory _symbol,
-		uint256 _totalSupply
+		uint256 _totalSupply,
+		address mintRecipient
 	) BaseERC20(_name, _symbol, 18) {
-		_mint(msg.sender, _totalSupply);
+		_mint(mintRecipient, _totalSupply);
 	}
 }

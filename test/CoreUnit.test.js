@@ -15,6 +15,7 @@ let aliceAddress, bobAddress, chadAddress;
 let whale, whaleAddress;
 
 let CoreContract, CoreInstance;
+let FactoryContract, FactoryInstance;
 
 let startTime, endTime;
 
@@ -37,6 +38,13 @@ describe("VestCore Unit Tests", function () {
     // Deploy core
     CoreContract = await ethers.getContractFactory("VestCore");
     CoreInstance = await CoreContract.connect(owner).deploy();
+
+    FactoryContract = await ethers.getContractFactory("VestERC20Factory");
+    FactoryInstance = await FactoryContract.connect(owner).deploy();
+
+    // Connect Core and Factory
+    await CoreInstance.connect(owner).setTokenFactory(FactoryInstance.address);
+    await FactoryInstance.connect(owner).setCoreAddress(CoreInstance.address);
 
     // Creating DAI token instance
     await hre.network.provider.request({

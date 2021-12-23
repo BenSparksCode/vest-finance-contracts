@@ -5,6 +5,8 @@ import '@openzeppelin/contracts/access/Ownable.sol';
 import './interfaces/IVestERC20Factory.sol';
 import './VestERC20.sol';
 
+import 'hardhat/console.sol';
+
 contract VestERC20Factory is IVestERC20Factory, Ownable {
 	address public VEST_CORE;
 
@@ -15,7 +17,7 @@ contract VestERC20Factory is IVestERC20Factory, Ownable {
 		string calldata _tokenSymbol,
 		uint256 _tokenTotalSupply
 	) external onlyCore returns (address) {
-		VestERC20 newToken = new VestERC20(_tokenName, _tokenSymbol, _tokenTotalSupply);
+		VestERC20 newToken = new VestERC20(_tokenName, _tokenSymbol, _tokenTotalSupply, VEST_CORE);
 		return address(newToken);
 	}
 
