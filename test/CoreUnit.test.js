@@ -126,7 +126,7 @@ describe("VestCore Unit Tests", function () {
       );
     });
 
-    it("with ETH", async () => {
+    it.only("with ETH", async () => {
       const totalAmount = ethers.utils.parseEther("50");
       const vBox = {
         token: ethers.constants.AddressZero,

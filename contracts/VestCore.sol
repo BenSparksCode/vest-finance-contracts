@@ -108,7 +108,7 @@ contract VestCore is Ownable {
 		uint256 _totalAmount,
 		VestingBox memory _vBox,
 		VestingBoxAccount[] memory _vBoxAccounts
-	) external returns (bool success) {
+	) external payable returns (bool success) {
 		_vBox.token = ETH;
 		_createVestingBox(_totalAmount, _vBox, _vBoxAccounts, false);
 	}
@@ -217,6 +217,10 @@ contract VestCore is Ownable {
 		require(_totalAmount > 0, 'VEST: CANNOT VEST 0 AMOUNT');
 		require(_vBox.recipients.length > 0, 'VEST: NO RECIPIENTS');
 		require(_vBox.recipients.length == _vBoxAccounts.length, 'VEST: WRONG ACCOUNTS ARRAY LEN');
+
+		if (_vBox.token == ETH) {
+			require(msg.value >= _totalAmount, 'VEST: ETH AMOUNT TOO LOW');
+		}
 
 		uint256 amountsSum = 0;
 		for (uint256 i = 0; i < _vBoxAccounts.length; i++) {
