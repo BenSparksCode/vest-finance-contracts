@@ -85,8 +85,8 @@ contract VestCore is Ownable {
 		uint256 _totalAmount,
 		VestingBox memory _vBox,
 		VestingBoxAccount[] memory _vBoxAccounts
-	) external returns (bool success) {
-		_createVestingBox(_totalAmount, _vBox, _vBoxAccounts, false);
+	) external returns (bool) {
+		return _createVestingBox(_totalAmount, _vBox, _vBoxAccounts, false);
 	}
 
 	// NOTE: _vBox token left blank, will be set to newly created token
@@ -97,23 +97,22 @@ contract VestCore is Ownable {
 		string calldata _tokenName,
 		string calldata _tokenSymbol,
 		uint256 _tokenTotalSupply
-	) external returns (bool success) {
+	) external returns (bool) {
 		// creates new token and sets address in _vBox before creating vBox
 		_vBox.token = _createERC20(_tokenName, _tokenSymbol, _tokenTotalSupply);
-		_createVestingBox(_totalAmount, _vBox, _vBoxAccounts, true);
+		return _createVestingBox(_totalAmount, _vBox, _vBoxAccounts, true);
 	}
 
-	// TODO
 	function createVestingBoxWithETH(
 		uint256 _totalAmount,
 		VestingBox memory _vBox,
 		VestingBoxAccount[] memory _vBoxAccounts
-	) external payable returns (bool success) {
+	) external payable returns (bool) {
 		_vBox.token = ETH;
-		_createVestingBox(_totalAmount, _vBox, _vBoxAccounts, false);
+		return _createVestingBox(_totalAmount, _vBox, _vBoxAccounts, false);
 	}
 
-	function claimVestedTokens(uint256 _vBoxId, uint256 _amountToClaim) public returns (bool success) {
+	function claimVestedTokens(uint256 _vBoxId, uint256 _amountToClaim) public returns (bool) {
 		// withdrawableAmount = total vested - withdrawn
 		uint256 withdrawableAmount = getWithdrawableAmount(_vBoxId, msg.sender);
 		require(withdrawableAmount >= _amountToClaim, 'VEST: WITHDRAWABLE TOO LOW');
@@ -195,13 +194,7 @@ contract VestCore is Ownable {
 		string calldata _tokenName,
 		string calldata _tokenSymbol,
 		uint256 _tokenTotalSupply
-	) internal returns (address newToken) {
-		// TODO
-
-		// deploy token (no owner)
-		// in constructor, mint total vesting amount to Core
-		// all recipients can recover amounts from Core
-
+	) internal returns (address) {
 		address newToken = tokenFactory.createERC20(_tokenName, _tokenSymbol, _tokenTotalSupply);
 
 		emit ERC20Created(newToken);
@@ -213,7 +206,7 @@ contract VestCore is Ownable {
 		VestingBox memory _vBox,
 		VestingBoxAccount[] memory _vBoxAccounts,
 		bool _newToken
-	) internal returns (bool success) {
+	) internal returns (bool) {
 		require(_totalAmount > 0, 'VEST: CANNOT VEST 0 AMOUNT');
 		require(_vBox.recipients.length > 0, 'VEST: NO RECIPIENTS');
 		require(_vBox.recipients.length == _vBoxAccounts.length, 'VEST: WRONG ACCOUNTS ARRAY LEN');
@@ -245,6 +238,8 @@ contract VestCore is Ownable {
 		}
 
 		assetsHeldForVesting[_vBox.token] += _totalAmount;
+
+		emit VestingBoxCreated(vBoxCount, _vBox.token, msg.sender, _totalAmount);
 
 		return true;
 	}
