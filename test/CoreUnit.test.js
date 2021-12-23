@@ -77,7 +77,7 @@ describe("VestCore Unit Tests", function () {
   // -----------------
 
   describe("createVestingBox", function () {
-    it("createVestingBoxWithExistingToken - normal args", async () => {
+    it("existing token", async () => {
       const totalAmount = ethers.utils.parseEther("50");
       const vBox = {
         token: constants.POLYGON.DAI,
@@ -99,10 +99,8 @@ describe("VestCore Unit Tests", function () {
         vBoxAccounts
       );
     });
-  });
 
-  describe("create new token", function () {
-    it.only("create new token - normal args", async () => {
+    it("new token", async () => {
       const totalAmount = ethers.utils.parseEther("50");
       const vBox = {
         token: constants.POLYGON.DAI,
@@ -125,6 +123,32 @@ describe("VestCore Unit Tests", function () {
         "Test coin",
         "TEST",
         ethers.utils.parseEther("50")
+      );
+    });
+
+    it.only("with ETH", async () => {
+      const totalAmount = ethers.utils.parseEther("50");
+      const vBox = {
+        token: ethers.constants.AddressZero,
+        admins: [aliceAddress],
+        recipients: [bobAddress],
+      };
+      const vBoxAccounts = [
+        {
+          amount: ethers.utils.parseEther("50"),
+          withdrawn: 0,
+          startTime: startTime,
+          endTime: endTime,
+        },
+      ];
+
+      await CoreInstance.connect(alice).createVestingBoxWithETH(
+        totalAmount,
+        vBox,
+        vBoxAccounts,
+        {
+          value: totalAmount,
+        }
       );
     });
   });

@@ -98,6 +98,7 @@ contract VestCore is Ownable {
 		string calldata _tokenSymbol,
 		uint256 _tokenTotalSupply
 	) public returns (bool success) {
+		// creates new token and sets address in _vBox before creating vBox
 		_vBox.token = _createERC20(_tokenName, _tokenSymbol, _tokenTotalSupply);
 		_createVestingBox(_totalAmount, _vBox, _vBoxAccounts, true);
 	}
