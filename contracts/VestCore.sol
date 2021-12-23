@@ -115,10 +115,12 @@ contract VestCore is Ownable {
 	function claimVestedTokens(uint256 _vBoxId, uint256 _amountToClaim) public returns (bool) {
 		// withdrawableAmount = total vested - withdrawn
 		uint256 withdrawableAmount = getWithdrawableAmount(_vBoxId, msg.sender);
-		require(withdrawableAmount >= _amountToClaim, 'VEST: WITHDRAWABLE TOO LOW');
+		require(withdrawableAmount >= _amountToClaim, 'VEST: NOT ENOUGH VESTED');
 
 		// Send tokens to recipient
 		_withdrawFromVBox(_vBoxId, _amountToClaim);
+
+		emit VestedTokensClaimed(_vBoxId, vBoxes[_vBoxId].token, _amountToClaim, msg.sender);
 
 		return true;
 	}
