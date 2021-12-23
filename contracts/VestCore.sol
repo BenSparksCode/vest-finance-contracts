@@ -85,7 +85,7 @@ contract VestCore is Ownable {
 		uint256 _totalAmount,
 		VestingBox memory _vBox,
 		VestingBoxAccount[] memory _vBoxAccounts
-	) public returns (bool success) {
+	) external returns (bool success) {
 		_createVestingBox(_totalAmount, _vBox, _vBoxAccounts, false);
 	}
 
@@ -97,7 +97,7 @@ contract VestCore is Ownable {
 		string calldata _tokenName,
 		string calldata _tokenSymbol,
 		uint256 _tokenTotalSupply
-	) public returns (bool success) {
+	) external returns (bool success) {
 		// creates new token and sets address in _vBox before creating vBox
 		_vBox.token = _createERC20(_tokenName, _tokenSymbol, _tokenTotalSupply);
 		_createVestingBox(_totalAmount, _vBox, _vBoxAccounts, true);
@@ -108,7 +108,7 @@ contract VestCore is Ownable {
 		uint256 _totalAmount,
 		VestingBox memory _vBox,
 		VestingBoxAccount[] memory _vBoxAccounts
-	) public returns (bool success) {
+	) external returns (bool success) {
 		_vBox.token = ETH;
 		_createVestingBox(_totalAmount, _vBox, _vBoxAccounts, false);
 	}
