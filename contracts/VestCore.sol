@@ -61,7 +61,8 @@ contract VestCore is Ownable {
 
 	event VestingBoxCreated(uint256 indexed vBoxID, address indexed token, address creator, uint256 totalBoxAmount);
 	event VestedTokensClaimed(uint256 indexed vBoxID, address indexed token, uint256 amountClaimed, address recipient);
-	event VestingBoxAdminSet(uint256 indexed vBoxID, address admin, bool isAdmin);
+
+	event VestingBoxAdminSet(uint256 indexed vBoxID, address account, bool isAdmin);
 
 	event AccountAddedToVestingBox();
 	event AccountRemovedFromVestingBox();
@@ -163,13 +164,13 @@ contract VestCore is Ownable {
 	//           BOX-ADMIN FUNCTIONS              //
 	// ------------------------------------------ //
 
-	// TODO check security - admins setting other admins?
 	function setVestingBoxAdmin(
 		uint256 _vBoxId,
 		address _account,
 		bool _isAdmin
 	) external onlyVestingBoxAdmin(_vBoxId, msg.sender) {
-		// TODO
+		isAdminOfVBox[_vBoxId][_account] = _isAdmin;
+		emit VestingBoxAdminSet(_vBoxId, _account, _isAdmin);
 	}
 
 	function addAccountToVestingBox(
