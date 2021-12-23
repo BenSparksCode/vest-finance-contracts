@@ -213,7 +213,6 @@ contract VestCore is Ownable {
 		VestingBoxAccount[] memory _vBoxAccounts,
 		bool _newToken
 	) internal returns (bool success) {
-		require(_vBox.token != address(0), 'VEST: ZERO ADDR NOT TOKEN');
 		require(_totalAmount > 0, 'VEST: CANNOT VEST 0 AMOUNT');
 		require(_vBox.recipients.length > 0, 'VEST: NO RECIPIENTS');
 		require(_vBox.recipients.length == _vBoxAccounts.length, 'VEST: WRONG ACCOUNTS ARRAY LEN');
