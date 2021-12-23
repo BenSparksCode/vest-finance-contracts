@@ -124,6 +124,7 @@ contract VestCore is Ownable {
 		return _createVestingBox(_totalAmount, _vBox, _vBoxAccounts, false);
 	}
 
+	// check manual setting amounta and withdrawn don't cause claim exploits
 	function claimVestedTokens(uint256 _vBoxId, uint256 _amountToClaim) public returns (bool) {
 		// withdrawableAmount = total vested - withdrawn
 		uint256 withdrawableAmount = getWithdrawableAmount(_vBoxId, msg.sender);
@@ -189,14 +190,28 @@ contract VestCore is Ownable {
 		address _recipient,
 		VestingBoxAccount memory _vBoxAccount
 	) external onlyVestingBoxAdmin(_vBoxId, msg.sender) {
-		// TODO
-		// 	event AccountAddedToVestingBox(
-		// 	uint256 indexed vBoxID,
-		// 	address account,
-		// 	uint256 amount,
-		// 	uint128 startTime,
-		// 	uint128 endTime
-		// );
+		// Cannot add if address already has vesting tokens in given vBox
+		require(vBoxAccounts[_vBoxId][_recipient].amount == 0, 'VEST: ACCOUNT ALREADY IN BOX');
+
+		// Check data in vBoxAccount is valid
+		_checkVBoxAccountValid(_vBoxAccount);
+
+		// pull new amount of token
+		require(
+			IERC20(vBoxes[_vBoxId].token).transferFrom(msg.sender, address(this), _vBoxAccount.amount),
+			'VEST: TOKEN TRANSFER FAILED'
+		);
+
+		vBoxAccounts[_vBoxId][_recipient] = _vBoxAccount;
+		assetsHeldForVesting[vBoxes[_vBoxId].token] += _vBoxAccount.amount;
+
+		emit AccountAddedToVestingBox(
+			_vBoxId,
+			_recipient,
+			_vBoxAccount.amount,
+			_vBoxAccount.startTime,
+			_vBoxAccount.endTime
+		);
 	}
 
 	// NOTE: sends unvested tokens back to vBox creator
@@ -261,6 +276,7 @@ contract VestCore is Ownable {
 		vBoxes[vBoxCount] = _vBox;
 
 		for (uint256 i = 0; i < _vBoxAccounts.length; i++) {
+			_checkVBoxAccountValid(_vBoxAccounts[i]);
 			vBoxAccounts[vBoxCount][_vBox.recipients[i]] = _vBoxAccounts[i];
 		}
 
@@ -282,6 +298,12 @@ contract VestCore is Ownable {
 		}
 		require(sent, 'VEST: WITHDRAW FAILED');
 		return true;
+	}
+
+	function _checkVBoxAccountValid(VestingBoxAccount memory _vBoxAccount) internal {
+		require(_vBoxAccount.startTime < _vBoxAccount.endTime, 'VEST: START TIME AFTER END TIME');
+		require(_vBoxAccount.endTime > block.timestamp, 'VEST: END TIME IN THE PAST');
+		require(_vBoxAccount.amount > 0, 'VEST: CANNOT VEST 0 AMOUNT');
 	}
 
 	// ------------------------------------------ //
