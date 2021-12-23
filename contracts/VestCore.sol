@@ -33,7 +33,7 @@ contract VestCore is Ownable {
 	// vBox for short in var naming
 	struct VestingBox {
 		address token;
-		address[] admins; // is this needed in struct? can we just use mapping?
+		address[] admins; // is this needed in struct? can we just use mapping? needed to pass in data as arg only???
 		address[] recipients; // same here, do we need to store the array?
 	}
 
@@ -64,8 +64,19 @@ contract VestCore is Ownable {
 
 	event VestingBoxAdminSet(uint256 indexed vBoxID, address account, bool isAdmin);
 
-	event AccountAddedToVestingBox();
-	event AccountRemovedFromVestingBox();
+	event AccountAddedToVestingBox(
+		uint256 indexed vBoxID,
+		address account,
+		uint256 amount,
+		uint128 startTime,
+		uint128 endTime
+	);
+	event AccountRemovedFromVestingBox(
+		uint256 indexed vBoxID,
+		address account,
+		uint256 amountVested,
+		uint256 amountForfeited
+	);
 
 	event FeesWithdrawn(address token, uint256 amount, address _to);
 	event FeesSet(uint256 oldFee, uint256 newFee);
@@ -179,6 +190,13 @@ contract VestCore is Ownable {
 		VestingBoxAccount memory _vBoxAccount
 	) external onlyVestingBoxAdmin(_vBoxId, msg.sender) {
 		// TODO
+		// 	event AccountAddedToVestingBox(
+		// 	uint256 indexed vBoxID,
+		// 	address account,
+		// 	uint256 amount,
+		// 	uint128 startTime,
+		// 	uint128 endTime
+		// );
 	}
 
 	// NOTE: sends unvested tokens back to vBox creator
@@ -187,6 +205,12 @@ contract VestCore is Ownable {
 		onlyVestingBoxAdmin(_vBoxId, msg.sender)
 	{
 		// TODO
+		// event AccountRemovedFromVestingBox(
+		// 	uint256 indexed vBoxID,
+		// 	address account,
+		// 	uint256 amountVested,
+		// 	uint256 amountForfeited
+		// );
 	}
 
 	// ------------------------------------------ //
