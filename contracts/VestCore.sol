@@ -33,6 +33,7 @@ contract VestCore is Ownable {
 	// vBox for short in var naming
 	struct VestingBox {
 		address token;
+		address creator;
 		address[] admins; // is this needed in struct? can we just use mapping? needed to pass in data as arg only???
 		address[] recipients; // same here, do we need to store the array?
 	}
@@ -66,14 +67,14 @@ contract VestCore is Ownable {
 
 	event AccountAddedToVestingBox(
 		uint256 indexed vBoxID,
-		address account,
+		address indexed account,
 		uint256 amount,
 		uint128 startTime,
 		uint128 endTime
 	);
 	event AccountRemovedFromVestingBox(
 		uint256 indexed vBoxID,
-		address account,
+		address indexed account,
 		uint256 amountVested,
 		uint256 amountForfeited
 	);
@@ -215,41 +216,30 @@ contract VestCore is Ownable {
 	}
 
 	// NOTE: sends unvested tokens back to vBox creator
-	function removeAccountFromVestingBox(uint256 _vBoxId, address _recipient)
+	function removeAccountFromVestingBox(uint256 _vBoxId, address _account)
 		external
 		onlyVestingBoxAdmin(_vBoxId, msg.sender)
 	{
-		// TODO
-
-		VestingBoxAccount memory vBoxAcc = vBoxAccounts[_vBoxId][_recipient];
+		// Store vBox and vBoxAccount in memory for fewer SLOADs
+		VestingBoxAccount memory vBoxAcc = vBoxAccounts[_vBoxId][_account];
+		VestingBox memory vBox = vBoxes[_vBoxId];
 
 		require(vBoxAcc.endTime > block.timestamp, 'VEST: ALREADY FULLY VESTED');
 
+		uint256 originalAmount = vBoxAcc.amount;
+
 		// Set amount to current vested amount
-		vBoxAcc.amount = getVestedAmount(_vBoxId, _recipient);
+		vBoxAcc.amount = getVestedAmount(_vBoxId, _account);
 
 		// Set endtime to now
+		vBoxAcc.endTime = uint128(block.timestamp);
 
-		// Send remaining locked tokens to vBox creator
+		uint256 amountForfeited = originalAmount - vBoxAcc.amount;
 
-		// 	struct VestingBox {
-		// 	address token;
-		// 	address[] admins; // is this needed in struct? can we just use mapping? needed to pass in data as arg only???
-		// 	address[] recipients; // same here, do we need to store the array?
-		// }
-		// // For mapping account => VestingBox data to avoid arrays
-		// struct VestingBoxAccount {
-		// 	uint256 amount;
-		// 	uint256 withdrawn;
-		// 	uint128 startTime;
-		// 	uint128 endTime;
-		// }
-		// event AccountRemovedFromVestingBox(
-		// 	uint256 indexed vBoxID,
-		// 	address account,
-		// 	uint256 amountVested,
-		// 	uint256 amountForfeited
-		// );
+		// Send remaining locked tokens back to vBox creator
+		require(IERC20(vBox.token).transfer(vBox.creator, amountForfeited), 'VEST: FORFEIT TOKENS FAILED');
+
+		emit AccountRemovedFromVestingBox(_vBoxId, _account, vBoxAcc.amount, amountForfeited);
 	}
 
 	// ------------------------------------------ //
