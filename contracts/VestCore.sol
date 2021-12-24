@@ -34,8 +34,12 @@ contract VestCore is Ownable {
 	struct VestingBox {
 		address token;
 		address creator;
-		address[] admins; // is this needed in struct? can we just use mapping? needed to pass in data as arg only???
-		address[] recipients; // same here, do we need to store the array?
+	}
+
+	// Not stored, defined for data structure passed in for vBox creation
+	struct VestingBoxAddresses {
+		address[] admins;
+		address[] recipients;
 	}
 
 	// For mapping account => VestingBox data to avoid arrays
@@ -97,9 +101,10 @@ contract VestCore is Ownable {
 	function createVestingBoxWithExistingToken(
 		uint256 _totalAmount,
 		VestingBox memory _vBox,
-		VestingBoxAccount[] memory _vBoxAccounts
+		VestingBoxAccount[] memory _vBoxAccounts,
+		VestingBoxAddresses calldata _vBoxAddresses
 	) external returns (bool) {
-		return _createVestingBox(_totalAmount, _vBox, _vBoxAccounts, false);
+		return _createVestingBox(_totalAmount, _vBox, _vBoxAccounts, _vBoxAddresses, false);
 	}
 
 	// NOTE: _vBox token left blank, will be set to newly created token
@@ -107,22 +112,24 @@ contract VestCore is Ownable {
 		uint256 _totalAmount,
 		VestingBox memory _vBox,
 		VestingBoxAccount[] memory _vBoxAccounts,
+		VestingBoxAddresses calldata _vBoxAddresses,
 		string calldata _tokenName,
 		string calldata _tokenSymbol,
 		uint256 _tokenTotalSupply
 	) external returns (bool) {
 		// creates new token and sets address in _vBox before creating vBox
 		_vBox.token = _createERC20(_tokenName, _tokenSymbol, _tokenTotalSupply);
-		return _createVestingBox(_totalAmount, _vBox, _vBoxAccounts, true);
+		return _createVestingBox(_totalAmount, _vBox, _vBoxAccounts, _vBoxAddresses, true);
 	}
 
 	function createVestingBoxWithETH(
 		uint256 _totalAmount,
 		VestingBox memory _vBox,
-		VestingBoxAccount[] memory _vBoxAccounts
+		VestingBoxAccount[] memory _vBoxAccounts,
+		VestingBoxAddresses calldata _vBoxAddresses
 	) external payable returns (bool) {
 		_vBox.token = ETH;
-		return _createVestingBox(_totalAmount, _vBox, _vBoxAccounts, false);
+		return _createVestingBox(_totalAmount, _vBox, _vBoxAccounts, _vBoxAddresses, false);
 	}
 
 	// check manual setting amounta and withdrawn don't cause claim exploits
@@ -261,11 +268,12 @@ contract VestCore is Ownable {
 		uint256 _totalAmount,
 		VestingBox memory _vBox,
 		VestingBoxAccount[] memory _vBoxAccounts,
+		VestingBoxAddresses calldata _vBoxAddresses,
 		bool _newToken
 	) internal returns (bool) {
 		require(_totalAmount > 0, 'VEST: CANNOT VEST 0 AMOUNT');
-		require(_vBox.recipients.length > 0, 'VEST: NO RECIPIENTS');
-		require(_vBox.recipients.length == _vBoxAccounts.length, 'VEST: WRONG ACCOUNTS ARRAY LEN');
+		require(_vBoxAddresses.recipients.length > 0, 'VEST: NO RECIPIENTS');
+		require(_vBoxAddresses.recipients.length == _vBoxAccounts.length, 'VEST: WRONG ACCOUNTS ARRAY LEN');
 
 		if (_vBox.token == ETH) {
 			require(msg.value >= _totalAmount, 'VEST: ETH AMOUNT TOO LOW');
@@ -289,10 +297,13 @@ contract VestCore is Ownable {
 		vBoxCount++;
 		vBoxes[vBoxCount] = _vBox;
 
+		// Set up all accounts in vBox
 		for (uint256 i = 0; i < _vBoxAccounts.length; i++) {
 			_checkVBoxAccountValid(_vBoxAccounts[i]);
-			vBoxAccounts[vBoxCount][_vBox.recipients[i]] = _vBoxAccounts[i];
+			vBoxAccounts[vBoxCount][_vBoxAddresses.recipients[i]] = _vBoxAccounts[i];
 		}
+
+		// TODO add setting box admins from array to mapping
 
 		assetsHeldForVesting[_vBox.token] += _totalAmount;
 
