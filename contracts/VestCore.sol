@@ -220,6 +220,30 @@ contract VestCore is Ownable {
 		onlyVestingBoxAdmin(_vBoxId, msg.sender)
 	{
 		// TODO
+
+		VestingBoxAccount memory vBoxAcc = vBoxAccounts[_vBoxId][_recipient];
+
+		require(vBoxAcc.endTime > block.timestamp, 'VEST: ALREADY FULLY VESTED');
+
+		// Set amount to current vested amount
+		vBoxAcc.amount = getVestedAmount(_vBoxId, _recipient);
+
+		// Set endtime to now
+
+		// Send remaining locked tokens to vBox creator
+
+		// 	struct VestingBox {
+		// 	address token;
+		// 	address[] admins; // is this needed in struct? can we just use mapping? needed to pass in data as arg only???
+		// 	address[] recipients; // same here, do we need to store the array?
+		// }
+		// // For mapping account => VestingBox data to avoid arrays
+		// struct VestingBoxAccount {
+		// 	uint256 amount;
+		// 	uint256 withdrawn;
+		// 	uint128 startTime;
+		// 	uint128 endTime;
+		// }
 		// event AccountRemovedFromVestingBox(
 		// 	uint256 indexed vBoxID,
 		// 	address account,
@@ -331,7 +355,7 @@ contract VestCore is Ownable {
 		return assetsHeldForVesting[_token];
 	}
 
-	// returns total vested - withdrawn
+	// returns total vested amount - withdrawn
 	function getWithdrawableAmount(uint256 _vBoxId, address _account) public view returns (uint256) {
 		if (block.timestamp >= vBoxAccounts[_vBoxId][_account].endTime) {
 			return vBoxAccounts[_vBoxId][_account].amount - vBoxAccounts[_vBoxId][_account].withdrawn;
@@ -344,6 +368,19 @@ contract VestCore is Ownable {
 		return vestedAmount - vBoxAccounts[_vBoxId][_account].withdrawn;
 	}
 
+	// Returns entire vested amount regardless of amount withdrawn
+	function getVestedAmount(uint256 _vBoxId, address _account) public view returns (uint256) {
+		if (block.timestamp >= vBoxAccounts[_vBoxId][_account].endTime) {
+			return vBoxAccounts[_vBoxId][_account].amount;
+		}
+
+		uint256 vestedTime = block.timestamp - vBoxAccounts[_vBoxId][_account].startTime;
+		uint256 totalTime = vBoxAccounts[_vBoxId][_account].endTime - vBoxAccounts[_vBoxId][_account].startTime;
+		uint256 vestedAmount = (vBoxAccounts[_vBoxId][_account].amount * vestedTime * SCALE) / (totalTime * SCALE);
+
+		return vestedAmount;
+	}
+
 	// ------------------------------------------ //
 	//                MODIFIERS                   //
 	// ------------------------------------------ //
@@ -353,8 +390,9 @@ contract VestCore is Ownable {
 		_;
 	}
 
-	modifier hasAmountInBox(uint256 _vBoxId, address _account) {
-		require(vBoxAccounts[_vBoxId][_account].amount > 0, 'VEST: NO AMOUNT IN BOX');
-		_;
-	}
+	// TODO Needed???
+	// modifier hasAmountInBox(uint256 _vBoxId, address _account) {
+	// 	require(vBoxAccounts[_vBoxId][_account].amount > 0, 'VEST: NO AMOUNT IN BOX');
+	// 	_;
+	// }
 }
