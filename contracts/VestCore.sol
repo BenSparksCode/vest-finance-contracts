@@ -302,13 +302,16 @@ contract VestCore is Ownable {
 		vBoxCount++;
 		vBoxes[vBoxCount] = _vBox;
 
-		// Set up all accounts in vBox
+		// Set up all recipient vBoxAccounts
 		for (uint256 i = 0; i < _vBoxAccounts.length; i++) {
 			_checkVBoxAccountValid(_vBoxAccounts[i]);
 			vBoxAccounts[vBoxCount][_vBoxAddresses.recipients[i]] = _vBoxAccounts[i];
 		}
 
-		// TODO add setting box admins from array to mapping
+		// Add all admins to isAdminOfVBox
+		for (uint256 i = 0; i < _vBoxAccounts.length; i++) {
+			isAdminOfVBox[vBoxCount][_vBoxAddresses.admins[i]] = true;
+		}
 
 		assetsHeldForVesting[_vBox.token] += _totalAmount;
 
