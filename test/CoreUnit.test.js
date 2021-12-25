@@ -78,74 +78,86 @@ describe("VestCore Unit Tests", function () {
 
   describe("createVestingBox", function () {
     it("existing token", async () => {
-      const totalAmount = ethers.utils.parseEther("50");
+      const totalAmount = ethers.utils.parseEther("10");
       const vBox = {
         token: constants.POLYGON.DAI,
-        admins: [aliceAddress],
-        recipients: [bobAddress],
+        creator: ownerAddress,
       };
       const vBoxAccounts = [
         {
-          amount: ethers.utils.parseEther("50"),
+          amount: ethers.utils.parseEther("10"),
           withdrawn: 0,
           startTime: startTime,
           endTime: endTime,
         },
       ];
+      const vBoxAddresses = {
+        admins: [aliceAddress],
+        recipients: [bobAddress],
+      };
 
       await CoreInstance.connect(alice).createVestingBoxWithExistingToken(
         totalAmount,
         vBox,
-        vBoxAccounts
+        vBoxAccounts,
+        vBoxAddresses
       );
     });
 
     it("new token", async () => {
-      const totalAmount = ethers.utils.parseEther("50");
+      const totalAmount = ethers.utils.parseEther("10");
       const vBox = {
         token: constants.POLYGON.DAI,
-        admins: [aliceAddress],
-        recipients: [bobAddress],
+        creator: ownerAddress,
       };
       const vBoxAccounts = [
         {
-          amount: ethers.utils.parseEther("50"),
+          amount: ethers.utils.parseEther("10"),
           withdrawn: 0,
           startTime: startTime,
           endTime: endTime,
         },
       ];
+      const vBoxAddresses = {
+        admins: [aliceAddress],
+        recipients: [bobAddress],
+      };
 
       await CoreInstance.connect(alice).createVestingBoxWithNewToken(
         totalAmount,
         vBox,
         vBoxAccounts,
+        vBoxAddresses,
         "Test coin",
         "TEST",
         ethers.utils.parseEther("50")
       );
     });
 
-    it.only("with ETH", async () => {
-      const totalAmount = ethers.utils.parseEther("50");
+    it("with ETH", async () => {
+      const totalAmount = ethers.utils.parseEther("10");
       const vBox = {
-        token: ethers.constants.AddressZero,
-        admins: [aliceAddress],
-        recipients: [bobAddress],
+        token: constants.POLYGON.DAI,
+        creator: ownerAddress,
       };
       const vBoxAccounts = [
         {
-          amount: ethers.utils.parseEther("50"),
+          amount: ethers.utils.parseEther("10"),
           withdrawn: 0,
           startTime: startTime,
           endTime: endTime,
         },
       ];
+      const vBoxAddresses = {
+        admins: [aliceAddress],
+        recipients: [bobAddress],
+      };
 
       await CoreInstance.connect(alice).createVestingBoxWithETH(
         totalAmount,
         vBox,
         vBoxAccounts,
+        vBoxAddresses,
         {
           value: totalAmount,
         }
