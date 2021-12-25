@@ -147,8 +147,6 @@ contract VestCore is Ownable {
 		return true;
 	}
 
-	// TODO if error in start/end times, all tokens withdrawable
-
 	// ------------------------------------------ //
 	//           ONLY-OWNER FUNCTIONS             //
 	// ------------------------------------------ //
