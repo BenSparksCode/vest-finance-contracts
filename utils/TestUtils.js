@@ -39,9 +39,50 @@ const sendDaiFromWhale = async (amount, whaleSigner, toSigner, coreAddress) => {
   await DAI.connect(toSigner).approve(coreAddress, amount);
 };
 
+// NOTE: creator needs to have 50 DAI
+const createBasicVestingBox = async (
+  coreContract,
+  creatorSigner,
+  recipientAddress,
+  adminAddress
+) => {
+  // vesting starts now, ends in 100 days
+  const startTime = await currentTime();
+  const endTime = startTime + 100 * constants.TEST.oneDay;
+  const totalAmount = ethers.utils.parseEther("50");
+
+  const vBox = {
+    token: constants.POLYGON.DAI,
+    creator: creatorSigner.address,
+  };
+  const vBoxAccounts = [
+    {
+      amount: totalAmount,
+      withdrawn: 0,
+      startTime: startTime,
+      endTime: endTime,
+    },
+  ];
+  const vBoxAddresses = {
+    admins: [adminAddress],
+    recipients: [recipientAddress],
+  };
+
+  await DAI.connect(creatorSigner).approve(coreContract.address, totalAmount);
+  await coreContract
+    .connect(creatorSigner)
+    .createVestingBoxWithExistingToken(
+      totalAmount,
+      vBox,
+      vBoxAccounts,
+      vBoxAddresses
+    );
+};
+
 module.exports = {
   currentTime: currentTime,
   fastForward: fastForward,
   burnTokenBalance: burnTokenBalance,
   sendDaiFromWhale: sendDaiFromWhale,
+  createBasicVestingBox: createBasicVestingBox,
 };

@@ -50,14 +50,15 @@ contract VestCore is Ownable {
 	}
 
 	// For storing entire vBox data per vBox ID
-	mapping(uint256 => VestingBox) private vBoxes;
+	mapping(uint256 => VestingBox) public vBoxes;
 	// For looking up specific account's data within vBox of given ID
 	// vBoxID => account => VestingBoxAccount
-	mapping(uint256 => mapping(address => VestingBoxAccount)) private vBoxAccounts;
+	mapping(uint256 => mapping(address => VestingBoxAccount)) public vBoxAccounts;
 	// isAdminOfVBox[vBoxId][account] = true/false
-	mapping(uint256 => mapping(address => bool)) private isAdminOfVBox;
+	mapping(uint256 => mapping(address => bool)) public isAdminOfVBox;
 	// All token and ETH balances held for vesting boxes (excl. fees)
-	mapping(address => uint256) private assetsHeldForVesting;
+	// NOTE: Use 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE as token to get ETH held
+	mapping(address => uint256) public assetsHeldForVesting;
 
 	// ------------------------------------------ //
 	//                  EVENTS                    //
@@ -320,6 +321,7 @@ contract VestCore is Ownable {
 			isAdminOfVBox[vBoxCount][_vBoxAddresses.admins[i]] = true;
 		}
 
+		// Account for increase in assets held for vesting
 		assetsHeldForVesting[_vBox.token] += _totalAmount;
 
 		emit VestingBoxCreated(vBoxCount, _vBox.token, msg.sender, _totalAmount);
@@ -372,13 +374,6 @@ contract VestCore is Ownable {
 	//             VIEW FUNCTIONS                 //
 	// ------------------------------------------ //
 
-	function getVestingBox(uint256 _vestingBoxId) public view returns (VestingBox memory vestingBox) {
-		require(_vestingBoxId > 0);
-		require(_vestingBoxId <= vBoxCount);
-
-		return vBoxes[_vestingBoxId];
-	}
-
 	// NOTE: Use 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE as token to get ETH fees
 	function getProtocolFeesEarned(address _token) public view returns (uint256) {
 		if (_token == ETH) {
@@ -386,11 +381,6 @@ contract VestCore is Ownable {
 		} else {
 			return IERC20(_token).balanceOf(address(this)) - assetsHeldForVesting[_token];
 		}
-	}
-
-	// NOTE: Use 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE as token to get ETH held
-	function getAssetHeldForVesting(address _token) public view returns (uint256) {
-		return assetsHeldForVesting[_token];
 	}
 
 	// returns (total vested amount - withdrawn) - fees

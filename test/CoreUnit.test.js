@@ -6,6 +6,7 @@ const {
   currentTime,
   fastForward,
   sendDaiFromWhale,
+  createBasicVestingBox,
 } = require("../utils/TestUtils");
 const { BigNumber } = require("ethers");
 
@@ -162,6 +163,29 @@ describe("VestCore Unit Tests", function () {
           value: totalAmount,
         }
       );
+    });
+  });
+
+  describe("View Functions", function () {
+    it("Public vBoxes mapping returns VestingBox object", async () => {
+      await createBasicVestingBox(CoreInstance, alice, bobAddress, chadAddress);
+
+      const vBox = await CoreInstance.vBoxes(1);
+
+      expect(vBox.token).to.equal(constants.POLYGON.DAI);
+      expect(vBox.creator).to.equal(aliceAddress);
+    });
+    it("Public vBoxAccounts mapping returns VestingBoxAccount object", async () => {
+      startTime = await currentTime();
+      endTime = startTime + 100 * constants.TEST.oneDay;
+      await createBasicVestingBox(CoreInstance, alice, bobAddress, chadAddress);
+
+      const vBoxAccount = await CoreInstance.vBoxAccounts(1, bobAddress);
+
+      expect(vBoxAccount.amount).to.equal(ethers.utils.parseEther("50"));
+      expect(vBoxAccount.withdrawn).to.equal(0);
+      expect(vBoxAccount.startTime).to.equal(startTime);
+      expect(vBoxAccount.endTime).to.equal(endTime);
     });
   });
 });

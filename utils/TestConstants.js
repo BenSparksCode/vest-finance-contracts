@@ -11,18 +11,9 @@ const CONSTANTS = {
     aDAI: "0x27F8D03b3a2196956ED754baDc28D73be8830A6e",
     DAI_WHALE: "0xB78e90E2eC737a2C0A24d68a0e54B410FFF3bD6B",
   },
-  SHIP: {
-    decimals: 18,
-    total: 100000000, //  100 million
-    hackathonAirdrop: 2000000, //  2 million
-    mainnetAirdrop: 8000000, //  8 million
-    strategicPartners: 16000000, //  16 million
-    stakingRewards: 20000000, //  20 million
-    teamVesting: 24000000, //  24 million
-    daoTreasury: 30000000, //  30 million
-  },
   TEST: {
     oneDai: ethers.utils.parseEther("1"),
+    oneDay: 86400,
     oneMonth: 2629800,
   },
   DEPLOY: {},
