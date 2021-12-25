@@ -242,12 +242,15 @@ contract VestCore is Ownable {
 		// Set endtime to now
 		vBoxAcc.endTime = uint128(block.timestamp);
 
+		// Calculate amount forfeited before fee is taken - this gross amount will be reported in event below
 		uint256 amountForfeited = originalAmount - vBoxAcc.amount;
 
-		// uint256 amountForfeitedAfterFee = _takeFee();
+		// Take fee and calc amount to send back after fee
+		uint256 amountForfeitedAfterFee = _takeFee(vBox.token, amountForfeited);
+		assetsHeldForVesting[vBox.token] -= amountForfeitedAfterFee;
 
 		// Send remaining locked tokens back to vBox creator
-		require(IERC20(vBox.token).transfer(vBox.creator, amountForfeited), 'VEST: FORFEIT TOKENS FAILED');
+		require(IERC20(vBox.token).transfer(vBox.creator, amountForfeitedAfterFee), 'VEST: FORFEIT TOKENS FAILED');
 
 		emit AccountRemovedFromVestingBox(_vBoxId, _account, vBoxAcc.amount, amountForfeited);
 	}
