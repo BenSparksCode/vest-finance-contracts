@@ -29,25 +29,24 @@ contract VestCore is Ownable {
 	IVestERC20Factory public tokenFactory;
 	address public ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
-	// Stores all properties of a vesting agreement
-	// vBox for short in var naming
+	// Stores global variables of vBox
 	struct VestingBox {
 		address token;
 		address creator;
+	}
+
+	// Stores per-address variables of vBox
+	struct VestingBoxAccount {
+		uint256 amount;
+		uint256 withdrawn;
+		uint128 startTime;
+		uint128 endTime;
 	}
 
 	// Not stored, defined for data structure passed in for vBox creation
 	struct VestingBoxAddresses {
 		address[] admins;
 		address[] recipients;
-	}
-
-	// For mapping account => VestingBox data to avoid arrays
-	struct VestingBoxAccount {
-		uint256 amount;
-		uint256 withdrawn;
-		uint128 startTime;
-		uint128 endTime;
 	}
 
 	// For storing entire vBox data per vBox ID
@@ -318,17 +317,22 @@ contract VestCore is Ownable {
 		return true;
 	}
 
-	function _withdrawFromVBox(uint256 _vBoxId, uint256 _amountToWithdraw) internal returns (bool success) {
+	function _withdrawFromVBox(uint256 _vBoxId, uint256 _amountAfterFee) internal returns (bool success) {
 		bool sent = false;
 		address tokenWithdrawn = vBoxes[_vBoxId].token;
+		uint256 amountBeforeFee = calcBeforeFeeAmount(_amountAfterFee);
+
+		// Take fee proportional to requested withdraw amount before sending
+		_takeFee(tokenWithdrawn, amountBeforeFee);
 
 		// Account for decrease in assets held - will revert if underflow (not enough for withdraw)
-		assetsHeldForVesting[tokenWithdrawn] -= _amountToWithdraw;
-		vBoxAccounts[_vBoxId][msg.sender].withdrawn += _amountToWithdraw;
+		assetsHeldForVesting[tokenWithdrawn] -= _amountAfterFee;
+		// Increase vBoxAcc.withdrawn by (amount sent to user + fee taken)
+		vBoxAccounts[_vBoxId][msg.sender].withdrawn += amountBeforeFee;
 		if (tokenWithdrawn == ETH) {
-			(sent, ) = msg.sender.call{ value: _amountToWithdraw }('');
+			(sent, ) = msg.sender.call{ value: _amountAfterFee }('');
 		} else {
-			sent = IERC20(tokenWithdrawn).transfer(msg.sender, _amountToWithdraw);
+			sent = IERC20(tokenWithdrawn).transfer(msg.sender, _amountAfterFee);
 		}
 		require(sent, 'VEST: WITHDRAW FAILED');
 		return true;
@@ -427,10 +431,4 @@ contract VestCore is Ownable {
 		require(isAdminOfVBox[_vBoxId][_account], 'VEST: NOT VBOX ADMIN');
 		_;
 	}
-
-	// TODO Needed???
-	// modifier hasAmountInBox(uint256 _vBoxId, address _account) {
-	// 	require(vBoxAccounts[_vBoxId][_account].amount > 0, 'VEST: NO AMOUNT IN BOX');
-	// 	_;
-	// }
 }
