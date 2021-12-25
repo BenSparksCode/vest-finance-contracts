@@ -243,6 +243,8 @@ contract VestCore is Ownable {
 
 		uint256 amountForfeited = originalAmount - vBoxAcc.amount;
 
+		// uint256 amountForfeitedAfterFee = _takeFee();
+
 		// Send remaining locked tokens back to vBox creator
 		require(IERC20(vBox.token).transfer(vBox.creator, amountForfeited), 'VEST: FORFEIT TOKENS FAILED');
 
@@ -331,6 +333,12 @@ contract VestCore is Ownable {
 		require(_vBoxAccount.amount > 0, 'VEST: CANNOT VEST 0 AMOUNT');
 	}
 
+	// Calculates fee on token and amount, accounts, and returns amount after fee
+	function _takeFee(address _token, uint256 _beforeFeeAmount) internal returns (uint256) {
+		// TODO
+		// Reduce assetHeldForVesting by fee
+	}
+
 	// ------------------------------------------ //
 	//             VIEW FUNCTIONS                 //
 	// ------------------------------------------ //
@@ -380,6 +388,16 @@ contract VestCore is Ownable {
 		uint256 vestedAmount = (vBoxAccounts[_vBoxId][_account].amount * vestedTime * SCALE) / (totalTime * SCALE);
 
 		return vestedAmount;
+	}
+
+	// Takes amount before fee and returns amount after fee
+	function calcAfterFeeAmount(uint256 _beforeFeeAmount) public view returns (uint256) {
+		return (_beforeFeeAmount * (SCALE - fee)) / SCALE;
+	}
+
+	// Takes amount after fee and returns amount before fee
+	function calcBeforeFeeAmount(uint256 _afterFeeAmount) public view returns (uint256) {
+		return (_afterFeeAmount * SCALE) / (SCALE - fee);
 	}
 
 	// ------------------------------------------ //
