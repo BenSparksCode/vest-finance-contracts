@@ -319,6 +319,8 @@ contract VestCore is Ownable {
 		bool sent = false;
 		address tokenWithdrawn = vBoxes[_vBoxId].token;
 
+		// Account for decrease in assets held - will revert if underflow (not enough for withdraw)
+		assetsHeldForVesting[tokenWithdrawn] -= _amountToWithdraw;
 		vBoxAccounts[_vBoxId][msg.sender].withdrawn += _amountToWithdraw;
 		if (tokenWithdrawn == ETH) {
 			(sent, ) = msg.sender.call{ value: _amountToWithdraw }('');
