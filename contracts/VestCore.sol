@@ -394,15 +394,17 @@ contract VestCore is Ownable {
 		return calcAfterFeeAmount(vestedAmount - vBoxAcc.withdrawn);
 	}
 
-	// Returns entire vested amount regardless of amount withdrawn
+	// Returns entire vested amount regardless of amount withdrawn or fees
 	function getVestedAmount(uint256 _vBoxId, address _account) public view returns (uint256) {
-		if (block.timestamp >= vBoxAccounts[_vBoxId][_account].endTime) {
-			return vBoxAccounts[_vBoxId][_account].amount;
+		VestingBoxAccount memory vBoxAcc = vBoxAccounts[_vBoxId][_account];
+
+		if (block.timestamp >= vBoxAcc.endTime) {
+			return vBoxAcc.amount;
 		}
 
-		uint256 vestedTime = block.timestamp - vBoxAccounts[_vBoxId][_account].startTime;
-		uint256 totalTime = vBoxAccounts[_vBoxId][_account].endTime - vBoxAccounts[_vBoxId][_account].startTime;
-		uint256 vestedAmount = (vBoxAccounts[_vBoxId][_account].amount * vestedTime * SCALE) / (totalTime * SCALE);
+		uint256 vestedTime = block.timestamp - vBoxAcc.startTime;
+		uint256 totalTime = vBoxAcc.endTime - vBoxAcc.startTime;
+		uint256 vestedAmount = (vBoxAcc.amount * vestedTime * SCALE) / (totalTime * SCALE);
 
 		return vestedAmount;
 	}
