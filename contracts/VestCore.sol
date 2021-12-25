@@ -83,6 +83,7 @@ contract VestCore is Ownable {
 		uint256 amountForfeited
 	);
 
+	event FeesEarned(address token, uint256 amount);
 	event FeesWithdrawn(address token, uint256 amount, address _to);
 	event FeesSet(uint256 oldFee, uint256 newFee);
 
@@ -171,7 +172,7 @@ contract VestCore is Ownable {
 	}
 
 	function setFee(uint256 _fee) public onlyOwner {
-		require(_fee <= SCALE, 'VEST: FEE MUST BE < 100%');
+		require(_fee < SCALE, 'VEST: FEE MUST BE < 100%');
 		fee = _fee;
 	}
 
@@ -316,12 +317,13 @@ contract VestCore is Ownable {
 
 	function _withdrawFromVBox(uint256 _vBoxId, uint256 _amountToWithdraw) internal returns (bool success) {
 		bool sent = false;
-		// TODO check here for withdraw limits?
+		address tokenWithdrawn = vBoxes[_vBoxId].token;
+
 		vBoxAccounts[_vBoxId][msg.sender].withdrawn += _amountToWithdraw;
-		if (vBoxes[_vBoxId].token == ETH) {
+		if (tokenWithdrawn == ETH) {
 			(sent, ) = msg.sender.call{ value: _amountToWithdraw }('');
 		} else {
-			sent = IERC20(vBoxes[_vBoxId].token).transfer(msg.sender, _amountToWithdraw);
+			sent = IERC20(tokenWithdrawn).transfer(msg.sender, _amountToWithdraw);
 		}
 		require(sent, 'VEST: WITHDRAW FAILED');
 		return true;
@@ -335,8 +337,16 @@ contract VestCore is Ownable {
 
 	// Calculates fee on token and amount, accounts, and returns amount after fee
 	function _takeFee(address _token, uint256 _beforeFeeAmount) internal returns (uint256) {
-		// TODO
-		// Reduce assetHeldForVesting by fee
+		// If fee is 0, skip calcs and return whole _beforeFeeAmount
+		if (fee == 0) {
+			return _beforeFeeAmount;
+		}
+		uint256 afterFeeAmount = calcAfterFeeAmount(_beforeFeeAmount);
+		uint256 feeTaken = _beforeFeeAmount - afterFeeAmount;
+		assetsHeldForVesting[_token] -= feeTaken;
+
+		emit FeesEarned(_token, feeTaken);
+		return afterFeeAmount;
 	}
 
 	// ------------------------------------------ //
