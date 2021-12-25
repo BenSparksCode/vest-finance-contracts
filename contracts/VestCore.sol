@@ -83,8 +83,8 @@ contract VestCore is Ownable {
 		uint256 amountForfeited
 	);
 
-	event FeesEarned(address token, uint256 amount);
-	event FeesWithdrawn(address token, uint256 amount, address _to);
+	event FeesEarned(address token, uint256 feesEarned);
+	event FeesWithdrawn(address token, uint256 feesWithdrawn, address _to);
 	event FeesSet(uint256 oldFee, uint256 newFee);
 
 	event ERC20Created(address tokenAddress);
@@ -134,15 +134,15 @@ contract VestCore is Ownable {
 	}
 
 	// check manual setting amounta and withdrawn don't cause claim exploits
-	function claimVestedTokens(uint256 _vBoxId, uint256 _amountToClaim) public returns (bool) {
+	function claimVestedTokens(uint256 _vBoxId, uint256 _amountClaimedAfterFee) public returns (bool) {
 		// withdrawableAmount = total vested - withdrawn
 		uint256 withdrawableAmount = getWithdrawableAmount(_vBoxId, msg.sender);
-		require(withdrawableAmount >= _amountToClaim, 'VEST: NOT ENOUGH VESTED');
+		require(withdrawableAmount >= _amountClaimedAfterFee, 'VEST: NOT ENOUGH VESTED');
 
 		// Send tokens to recipient
-		_withdrawFromVBox(_vBoxId, _amountToClaim);
+		_withdrawFromVBox(_vBoxId, _amountClaimedAfterFee);
 
-		emit VestedTokensClaimed(_vBoxId, vBoxes[_vBoxId].token, _amountToClaim, msg.sender);
+		emit VestedTokensClaimed(_vBoxId, vBoxes[_vBoxId].token, _amountClaimedAfterFee, msg.sender);
 
 		return true;
 	}
@@ -379,17 +379,19 @@ contract VestCore is Ownable {
 		return assetsHeldForVesting[_token];
 	}
 
-	// returns total vested amount - withdrawn
+	// returns (total vested amount - withdrawn) - fees
 	function getWithdrawableAmount(uint256 _vBoxId, address _account) public view returns (uint256) {
-		if (block.timestamp >= vBoxAccounts[_vBoxId][_account].endTime) {
-			return vBoxAccounts[_vBoxId][_account].amount - vBoxAccounts[_vBoxId][_account].withdrawn;
+		VestingBoxAccount memory vBoxAcc = vBoxAccounts[_vBoxId][_account];
+
+		if (block.timestamp >= vBoxAcc.endTime) {
+			return vBoxAcc.amount - vBoxAcc.withdrawn;
 		}
 
-		uint256 vestedTime = block.timestamp - vBoxAccounts[_vBoxId][_account].startTime;
-		uint256 totalTime = vBoxAccounts[_vBoxId][_account].endTime - vBoxAccounts[_vBoxId][_account].startTime;
-		uint256 vestedAmount = (vBoxAccounts[_vBoxId][_account].amount * vestedTime * SCALE) / (totalTime * SCALE);
+		uint256 vestedTime = block.timestamp - vBoxAcc.startTime;
+		uint256 totalTime = vBoxAcc.endTime - vBoxAcc.startTime;
+		uint256 vestedAmount = (vBoxAcc.amount * vestedTime * SCALE) / (totalTime * SCALE);
 
-		return vestedAmount - vBoxAccounts[_vBoxId][_account].withdrawn;
+		return calcAfterFeeAmount(vestedAmount - vBoxAcc.withdrawn);
 	}
 
 	// Returns entire vested amount regardless of amount withdrawn
