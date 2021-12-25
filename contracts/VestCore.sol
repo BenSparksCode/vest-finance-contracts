@@ -84,7 +84,7 @@ contract VestCore is Ownable {
 
 	event FeesEarned(address token, uint256 feesEarned);
 	event FeesWithdrawn(address token, uint256 feesWithdrawn, address _to);
-	event FeesSet(uint256 oldFee, uint256 newFee);
+	event FeeChanged(uint256 oldFee, uint256 newFee);
 
 	event ERC20Created(address tokenAddress);
 
@@ -175,8 +175,11 @@ contract VestCore is Ownable {
 	}
 
 	function setFee(uint256 _fee) public onlyOwner {
+		uint256 oldFee = fee;
 		require(_fee < SCALE, 'VEST: FEE MUST BE < 100%');
 		fee = _fee;
+
+		emit FeeChanged(oldFee, _fee);
 	}
 
 	function setTokenFactory(IVestERC20Factory _newFactory) external onlyOwner {
