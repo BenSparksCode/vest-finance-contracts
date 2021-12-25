@@ -162,12 +162,16 @@ contract VestCore is Ownable {
 			'VEST: AMOUNT TOO HIGH'
 		);
 		IERC20(_token).transfer(_to, _amount);
+
+		emit FeesWithdrawn(_token, _amount, _to);
 	}
 
 	function withdrawETHFees(uint256 _amount, address _to) public onlyOwner {
 		require(address(this).balance - assetsHeldForVesting[ETH] >= _amount, 'VEST: AMOUNT TOO HIGH');
 		(bool sent, ) = _to.call{ value: _amount }('');
 		require(sent, 'VEST: ETH TRANSFER FAILED');
+
+		emit FeesWithdrawn(ETH, _amount, _to);
 	}
 
 	function setFee(uint256 _fee) public onlyOwner {
