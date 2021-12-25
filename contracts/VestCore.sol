@@ -7,16 +7,13 @@ import '@openzeppelin/contracts/access/Ownable.sol';
 import './interfaces/IVestERC20Factory.sol';
 import './VestERC20.sol';
 
-import 'hardhat/console.sol';
+import 'hardhat/console.sol'; //TODO remove
 
 // ------------------------------------------- //
 //             🦺 VestCore v0.1 🦺             //
 // ------------------------------------------ //
 
 // TODO Natspec all functions
-// TODO make sure all vars are used efficiently (mappings vs arrays)
-// TODO check if all return types are needed
-// TODO events for everything important
 
 /**
     @title VestCore

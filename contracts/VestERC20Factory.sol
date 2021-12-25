@@ -5,7 +5,7 @@ import '@openzeppelin/contracts/access/Ownable.sol';
 import './interfaces/IVestERC20Factory.sol';
 import './VestERC20.sol';
 
-import 'hardhat/console.sol';
+import 'hardhat/console.sol'; //TODO remove
 
 contract VestERC20Factory is IVestERC20Factory, Ownable {
 	address public VEST_CORE;
