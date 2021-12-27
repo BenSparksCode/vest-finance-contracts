@@ -18,6 +18,8 @@ let whale, whaleAddress;
 let CoreContract, CoreInstance;
 let FactoryContract, FactoryInstance;
 
+let TokenContract, TokenInstance;
+
 let startTime, endTime;
 
 const ERC20_ABI = require("../artifacts/contracts/BaseERC20.sol/BaseERC20.json");
@@ -43,31 +45,40 @@ describe("VestCore Unit Tests", function () {
     FactoryContract = await ethers.getContractFactory("VestERC20Factory");
     FactoryInstance = await FactoryContract.connect(owner).deploy();
 
+    // Deploying test ERC20 token - mint 1 mil to owner
+    TokenContract = await ethers.getContractFactory("VestERC20");
+    TokenInstance = await TokenContract.connect(owner).deploy(
+      "Test Token",
+      "TEST",
+      ethers.utils.parseEther("1000000"),
+      ownerAddress
+    );
+
     // Connect Core and Factory
     await CoreInstance.connect(owner).setTokenFactory(FactoryInstance.address);
     await FactoryInstance.connect(owner).setCoreAddress(CoreInstance.address);
 
     // Creating DAI token instance
-    await hre.network.provider.request({
-      method: "hardhat_impersonateAccount",
-      params: [constants.POLYGON.DAI_WHALE],
-    });
+    // await hre.network.provider.request({
+    //   method: "hardhat_impersonateAccount",
+    //   params: [constants.POLYGON.DAI_WHALE],
+    // });
 
-    whale = await ethers.getSigner(constants.POLYGON.DAI_WHALE);
-    whaleAddress = await whale.getAddress();
+    // whale = await ethers.getSigner(constants.POLYGON.DAI_WHALE);
+    // whaleAddress = await whale.getAddress();
 
-    // Give whale some ETH
-    await alice.sendTransaction({
-      to: whaleAddress,
-      value: ethers.utils.parseEther("1"),
-    });
+    // // Give whale some ETH
+    // await alice.sendTransaction({
+    //   to: whaleAddress,
+    //   value: ethers.utils.parseEther("1"),
+    // });
 
-    await sendDaiFromWhale(
-      ethers.utils.parseEther("100"),
-      whale,
-      alice,
-      CoreInstance.address
-    );
+    // await sendDaiFromWhale(
+    //   ethers.utils.parseEther("100"),
+    //   whale,
+    //   alice,
+    //   CoreInstance.address
+    // );
 
     startTime = await currentTime();
     endTime = startTime + constants.TEST.oneMonth;
@@ -80,13 +91,18 @@ describe("VestCore Unit Tests", function () {
   describe("createVestingBox", function () {
     it("existing token", async () => {
       const totalAmount = ethers.utils.parseEther("10");
+
+      // Send Alice tokens and Alice approves Core to take tokens
+      TokenInstance.connect(owner).transfer(alice, totalAmount);
+      TokenInstance.connect(alice).approve(CoreInstance.address, totalAmount);
+
       const vBox = {
-        token: constants.POLYGON.DAI,
-        creator: ownerAddress,
+        token: TokenInstance.address,
+        creator: aliceAddress,
       };
       const vBoxAccounts = [
         {
-          amount: ethers.utils.parseEther("10"),
+          amount: totalAmount,
           withdrawn: 0,
           startTime: startTime,
           endTime: endTime,
@@ -96,6 +112,8 @@ describe("VestCore Unit Tests", function () {
         admins: [aliceAddress],
         recipients: [bobAddress],
       };
+
+      console.log("halskdjfas");
 
       await CoreInstance.connect(alice).createVestingBoxWithExistingToken(
         totalAmount,
@@ -108,12 +126,12 @@ describe("VestCore Unit Tests", function () {
     it("new token", async () => {
       const totalAmount = ethers.utils.parseEther("10");
       const vBox = {
-        token: constants.POLYGON.DAI,
+        token: TokenInstance.vBoxAddress,
         creator: ownerAddress,
       };
       const vBoxAccounts = [
         {
-          amount: ethers.utils.parseEther("10"),
+          amount: totalAmount,
           withdrawn: 0,
           startTime: startTime,
           endTime: endTime,
