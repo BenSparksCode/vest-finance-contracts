@@ -90,7 +90,7 @@ describe("VestCore Unit Tests", function () {
 
   describe("createVestingBox", function () {
     it.only("existing token", async () => {
-      const totalAmount = ethers.utils.parseEther("10");
+      const totalAmount = ethers.utils.parseEther("5");
 
       let bal = await TokenInstance.balanceOf(ownerAddress);
       console.log("owner", bal.toString());
@@ -98,8 +98,11 @@ describe("VestCore Unit Tests", function () {
       console.log("alice", bal.toString());
 
       // Send Alice tokens and Alice approves Core to take tokens
-      TokenInstance.connect(owner).transfer(aliceAddress, totalAmount);
-      TokenInstance.connect(alice).approve(CoreInstance.address, totalAmount);
+      await TokenInstance.connect(owner).transfer(aliceAddress, totalAmount);
+      await TokenInstance.connect(alice).approve(
+        CoreInstance.address,
+        totalAmount
+      );
 
       const vBox = {
         token: TokenInstance.address,
@@ -118,7 +121,12 @@ describe("VestCore Unit Tests", function () {
         recipients: [bobAddress],
       };
 
-      console.log("halskdjfas");
+      console.log(ownerAddress, aliceAddress);
+
+      bal = await TokenInstance.balanceOf(ownerAddress);
+      console.log("owner", bal.toString());
+      bal = await TokenInstance.balanceOf(aliceAddress);
+      console.log("alice", bal.toString());
 
       await CoreInstance.connect(alice).createVestingBoxWithExistingToken(
         totalAmount,
