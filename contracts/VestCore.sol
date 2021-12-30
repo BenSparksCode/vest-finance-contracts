@@ -179,7 +179,6 @@ contract VestCore is Ownable {
 	}
 
 	function setTokenFactory(IVestERC20Factory _newFactory) external onlyOwner {
-		require(address(_newFactory) != address(0), 'VEST: FACTORY NOT ZERO ADDRESS');
 		tokenFactory = _newFactory;
 	}
 
