@@ -117,6 +117,7 @@ describe("VestCore Scenario Tests", function () {
       vestedAmount = await getVestedAmount(1, bobAddress);
 
       expect(withdrawableAmount).to.equal(afterFee());
+      expect(vestedAmount).to.equal(afterFee());
 
       // Bob withdraws half
       await CoreInstance.connect(bob).claimVestedTokens(1);
