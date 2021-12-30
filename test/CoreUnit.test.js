@@ -187,17 +187,38 @@ describe("VestCore Unit Tests", function () {
 
   describe("View Functions", function () {
     it("Public vBoxes mapping returns VestingBox object", async () => {
-      await createBasicVestingBox(CoreInstance, alice, bobAddress, chadAddress);
+      const totalAmount = ethers.utils.parseEther("50");
+
+      // Send Alice tokens and Alice approves Core to take tokens
+      await TokenInstance.connect(owner).transfer(aliceAddress, totalAmount);
+
+      await createBasicVestingBox(
+        CoreInstance,
+        TokenInstance,
+        alice,
+        bobAddress,
+        chadAddress
+      );
 
       const vBox = await CoreInstance.vBoxes(1);
 
-      expect(vBox.token).to.equal(constants.POLYGON.DAI);
+      expect(vBox.token).to.equal(TokenInstance.address);
       expect(vBox.creator).to.equal(aliceAddress);
     });
     it("Public vBoxAccounts mapping returns VestingBoxAccount object", async () => {
+      const totalAmount = ethers.utils.parseEther("50");
+      await TokenInstance.connect(owner).transfer(aliceAddress, totalAmount);
+
       startTime = await currentTime();
       endTime = startTime + 100 * constants.TEST.oneDay;
-      await createBasicVestingBox(CoreInstance, alice, bobAddress, chadAddress);
+
+      await createBasicVestingBox(
+        CoreInstance,
+        TokenInstance,
+        alice,
+        bobAddress,
+        chadAddress
+      );
 
       const vBoxAccount = await CoreInstance.vBoxAccounts(1, bobAddress);
 

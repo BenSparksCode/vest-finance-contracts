@@ -42,6 +42,7 @@ const sendDaiFromWhale = async (amount, whaleSigner, toSigner, coreAddress) => {
 // NOTE: creator needs to have 50 DAI
 const createBasicVestingBox = async (
   coreContract,
+  tokenContract,
   creatorSigner,
   recipientAddress,
   adminAddress
@@ -52,7 +53,7 @@ const createBasicVestingBox = async (
   const totalAmount = ethers.utils.parseEther("50");
 
   const vBox = {
-    token: constants.POLYGON.DAI,
+    token: tokenContract.address,
     creator: creatorSigner.address,
   };
   const vBoxAccounts = [
@@ -68,7 +69,9 @@ const createBasicVestingBox = async (
     recipients: [recipientAddress],
   };
 
-  await DAI.connect(creatorSigner).approve(coreContract.address, totalAmount);
+  await tokenContract
+    .connect(creatorSigner)
+    .approve(coreContract.address, totalAmount);
   await coreContract
     .connect(creatorSigner)
     .createVestingBoxWithExistingToken(
