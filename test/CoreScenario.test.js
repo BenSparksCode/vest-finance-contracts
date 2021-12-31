@@ -72,6 +72,7 @@ describe("VestCore Scenario Tests", function () {
       // Recipients: Bob
       // Check balances halfway (50 days) and at end (100 days)
       let expectedAmount, vestedAmount, withdrawableAmount;
+      let expectedBalance, bobBalance, aliceBalance;
       const totalAmount = ethers.utils.parseEther("10");
       await TokenInstance.connect(owner).transfer(aliceAddress, totalAmount);
       await TokenInstance.connect(alice).approve(
@@ -110,6 +111,7 @@ describe("VestCore Scenario Tests", function () {
       await fastForward(50 * constants.TEST.oneDay);
 
       // Check withdrawable and vested amounts are as expected
+      bobBalance = await TokenInstance.balanceOf(bobAddress);
       vestedAmount = await CoreInstance.getVestedAmount(1, bobAddress);
       withdrawableAmount = await CoreInstance.getWithdrawableAmount(
         1,
@@ -117,6 +119,7 @@ describe("VestCore Scenario Tests", function () {
       );
 
       expectedAmount = afterFee(totalAmount.div(2));
+      expect(bobBalance).to.equal(0);
       expect(withdrawableAmount).to.be.closeTo(
         expectedAmount,
         expectedAmount.div(100)
@@ -126,16 +129,21 @@ describe("VestCore Scenario Tests", function () {
         expectedAmount.div(100)
       );
 
+      expectedBalance = withdrawableAmount;
+
       // Bob withdraws max withdrawable (half of total)
       await CoreInstance.connect(bob).claimVestedTokens(1, withdrawableAmount);
 
       // Check amounts again, withdrawable should be close to 0
+      bobBalance = await TokenInstance.balanceOf(bobAddress);
       vestedAmount = await CoreInstance.getVestedAmount(1, bobAddress);
       withdrawableAmount = await CoreInstance.getWithdrawableAmount(
         1,
         bobAddress
       );
 
+      // Bob's new balance should be equal to withdrawableAmount claimed
+      expect(bobBalance).to.equal(expectedBalance);
       expect(withdrawableAmount).to.be.within(0, expectedAmount.div(100));
       expect(vestedAmount).to.be.closeTo(
         expectedAmount,
