@@ -173,6 +173,12 @@ describe("VestCore Scenario Tests", function () {
       );
       expect(vestedAmount).to.equal(totalAmount);
 
+      let contractBal = await TokenInstance.balanceOf(CoreInstance.address);
+      console.log(contractBal.toString());
+      console.log(afterFee(contractBal).toString());
+      console.log(withdrawableAmount.toString());
+      console.log(afterFee(withdrawableAmount).toString());
+
       // Claim rest of tokens
       await CoreInstance.connect(bob).claimVestedTokens(1, withdrawableAmount);
 
