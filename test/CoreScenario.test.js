@@ -70,6 +70,8 @@ describe("VestCore Scenario Tests", function () {
     it.only("DAI, 1 recipient, 100 day vest, 2 claims", async () => {
       // Creator: Alice
       // Recipients: Bob
+      // Check balances halfway (50 days) and at end (100 days)
+      let expectedAmount, vestedAmount, withdrawableAmount;
       const totalAmount = ethers.utils.parseEther("10");
       await TokenInstance.connect(owner).transfer(aliceAddress, totalAmount);
       await TokenInstance.connect(alice).approve(
@@ -107,21 +109,38 @@ describe("VestCore Scenario Tests", function () {
       // Fast forward 50 days
       await fastForward(50 * constants.TEST.oneDay);
 
-      //   TODO check data
-
+      // Check withdrawable and vested amounts are as expected
       vestedAmount = await CoreInstance.getVestedAmount(1, bobAddress);
       withdrawableAmount = await CoreInstance.getWithdrawableAmount(
         1,
         bobAddress
       );
 
-      console.log(afterFee(BigNumber.from(1000)).toString());
+      expectedAmount = afterFee(totalAmount.div(2));
+      expect(withdrawableAmount).to.be.closeTo(
+        expectedAmount,
+        expectedAmount.div(100)
+      );
+      expect(vestedAmount).to.be.closeTo(
+        expectedAmount,
+        expectedAmount.div(100)
+      );
 
-      expect(withdrawableAmount).to.equal(afterFee(totalAmount));
-      expect(vestedAmount).to.equal(afterFee(totalAmount));
+      // Bob withdraws max withdrawable (half of total)
+      await CoreInstance.connect(bob).claimVestedTokens(1, withdrawableAmount);
 
-      // Bob withdraws half
-      await CoreInstance.connect(bob).claimVestedTokens(1);
+      // Check amounts again, withdrawable should be close to 0
+      vestedAmount = await CoreInstance.getVestedAmount(1, bobAddress);
+      withdrawableAmount = await CoreInstance.getWithdrawableAmount(
+        1,
+        bobAddress
+      );
+
+      expect(withdrawableAmount).to.be.within(0, expectedAmount.div(100));
+      expect(vestedAmount).to.be.closeTo(
+        expectedAmount,
+        expectedAmount.div(100)
+      );
     });
   });
 });
