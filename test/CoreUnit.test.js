@@ -17,7 +17,6 @@ let whale, whaleAddress;
 
 let CoreContract, CoreInstance;
 let FactoryContract, FactoryInstance;
-
 let TokenContract, TokenInstance;
 
 let startTime, endTime;

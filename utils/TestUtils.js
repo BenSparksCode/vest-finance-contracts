@@ -82,10 +82,18 @@ const createBasicVestingBox = async (
     );
 };
 
+// type: BigNumber
+const afterFee = (beforeFee) => {
+  return beforeFee.mul(
+    constants.DEPLOY.SCALE.sub(constants.DEPLOY.fee).div(constants.DEPLOY.SCALE)
+  );
+};
+
 module.exports = {
   currentTime: currentTime,
   fastForward: fastForward,
   burnTokenBalance: burnTokenBalance,
   sendDaiFromWhale: sendDaiFromWhale,
   createBasicVestingBox: createBasicVestingBox,
+  afterFee: afterFee,
 };

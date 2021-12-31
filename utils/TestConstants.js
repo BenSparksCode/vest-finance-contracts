@@ -16,7 +16,10 @@ const CONSTANTS = {
     oneDay: 86400,
     oneMonth: 2629800,
   },
-  DEPLOY: {},
+  DEPLOY: {
+    SCALE: ethers.utils.parseEther("1"),
+    fee: ethers.utils.parseEther("0.001"),
+  },
 };
 
 module.exports = {
