@@ -67,11 +67,14 @@ describe("VestCore Scenario Tests", function () {
   // -----------------
 
   describe("Scenarios", function () {
-    it.only("DAI, 1 recipient, 100 day vest, 2 claims", async () => {
+    it.only("Existing token, 1 recipient, 100 day vest, 2 claims", async () => {
       // Creator: Alice
       // Recipients: Bob
       // Check balances halfway (50 days) and at end (100 days)
-      let expectedAmount, vestedAmount, withdrawableAmount;
+      let expectedWithdrawable,
+        expectedVested,
+        vestedAmount,
+        withdrawableAmount;
       let expectedBalance, bobBalance, aliceBalance;
       const totalAmount = ethers.utils.parseEther("10");
       await TokenInstance.connect(owner).transfer(aliceAddress, totalAmount);
@@ -89,7 +92,7 @@ describe("VestCore Scenario Tests", function () {
       };
       const vBoxAccounts = [
         {
-          amount: ethers.utils.parseEther("10"),
+          amount: totalAmount,
           withdrawn: 0,
           startTime: startTime,
           endTime: endTime,
@@ -107,7 +110,7 @@ describe("VestCore Scenario Tests", function () {
         vBoxAddresses
       );
 
-      // Fast forward 50 days
+      // Fast forward 50 days - halfway through vesting
       await fastForward(50 * constants.TEST.oneDay);
 
       // Check withdrawable and vested amounts are as expected
@@ -118,15 +121,16 @@ describe("VestCore Scenario Tests", function () {
         bobAddress
       );
 
-      expectedAmount = afterFee(totalAmount.div(2));
+      expectedWithdrawable = afterFee(totalAmount.div(2));
+      expectedVested = totalAmount.div(2);
       expect(bobBalance).to.equal(0);
       expect(withdrawableAmount).to.be.closeTo(
-        expectedAmount,
-        expectedAmount.div(100)
+        expectedWithdrawable,
+        expectedWithdrawable.div(constants.DEPLOY.ERR_TOL_DIV)
       );
       expect(vestedAmount).to.be.closeTo(
-        expectedAmount,
-        expectedAmount.div(100)
+        expectedVested,
+        expectedVested.div(constants.DEPLOY.ERR_TOL_DIV)
       );
 
       expectedBalance = withdrawableAmount;
@@ -144,11 +148,47 @@ describe("VestCore Scenario Tests", function () {
 
       // Bob's new balance should be equal to withdrawableAmount claimed
       expect(bobBalance).to.equal(expectedBalance);
-      expect(withdrawableAmount).to.be.within(0, expectedAmount.div(100));
-      expect(vestedAmount).to.be.closeTo(
-        expectedAmount,
-        expectedAmount.div(100)
+      expect(withdrawableAmount).to.be.within(
+        0,
+        expectedWithdrawable.div(constants.DEPLOY.ERR_TOL_DIV)
       );
+      expect(vestedAmount).to.be.closeTo(
+        expectedVested,
+        expectedVested.div(constants.DEPLOY.ERR_TOL_DIV)
+      );
+
+      // Fast forward 51 days - past end of vesting
+      await fastForward(51 * constants.TEST.oneDay);
+
+      vestedAmount = await CoreInstance.getVestedAmount(1, bobAddress);
+      withdrawableAmount = await CoreInstance.getWithdrawableAmount(
+        1,
+        bobAddress
+      );
+
+      expectedWithdrawable = afterFee(totalAmount.sub(expectedBalance));
+      expect(withdrawableAmount).to.be.closeTo(
+        expectedWithdrawable,
+        expectedWithdrawable.div(constants.DEPLOY.ERR_TOL_DIV)
+      );
+      expect(vestedAmount).to.equal(totalAmount);
+
+      // Claim rest of tokens
+      await CoreInstance.connect(bob).claimVestedTokens(1, withdrawableAmount);
+
+      bobBalance = await TokenInstance.balanceOf(bobAddress);
+      vestedAmount = await CoreInstance.getVestedAmount(1, bobAddress);
+      withdrawableAmount = await CoreInstance.getWithdrawableAmount(
+        1,
+        bobAddress
+      );
+
+      expect(withdrawableAmount).to.be.closeTo(
+        0,
+        expectedWithdrawable.div(constants.DEPLOY.ERR_TOL_DIV)
+      );
+      expect(vestedAmount).to.equal(totalAmount);
+      expect(bobBalance).to.equal(afterFee(totalAmount));
     });
   });
 });

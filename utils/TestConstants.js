@@ -17,6 +17,7 @@ const CONSTANTS = {
     oneMonth: 2629800,
   },
   DEPLOY: {
+    ERR_TOL_DIV: 10000, // error tolerance divisor
     SCALE: ethers.utils.parseEther("1"),
     fee: ethers.utils.parseEther("0.001"),
   },
