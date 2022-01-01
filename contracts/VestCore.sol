@@ -136,9 +136,6 @@ contract VestCore is Ownable {
 		uint256 withdrawableAmount = getWithdrawableAmount(_vBoxId, msg.sender);
 		require(withdrawableAmount >= _amountClaimedAfterFee, 'VEST: NOT ENOUGH VESTED');
 
-		console.log('WITHDRAWABLE');
-		console.log(withdrawableAmount);
-
 		// Send tokens to recipient
 		_withdrawFromVBox(_vBoxId, _amountClaimedAfterFee);
 
@@ -248,12 +245,9 @@ contract VestCore is Ownable {
 
 		// Calculate amount forfeited before fee is taken - this gross amount will be reported in event below
 		uint256 amountForfeited = originalAmount - vBoxAcc.amount;
-		// TODO check efficiency - ops might be happening twice
-		uint256 amountForfeitedAfterFee = calcAfterFeeAmount(amountForfeited);
-		uint256 feeOnFortfeited = amountForfeited - amountForfeitedAfterFee;
 
 		// Take fee and calc amount to send back after fee
-		_takeFee(vBox.token, amountForfeited);
+		uint256 amountForfeitedAfterFee = _takeFee(vBox.token, amountForfeited);
 		assetsHeldForVesting[vBox.token] -= amountForfeitedAfterFee;
 
 		// Send remaining locked tokens back to vBox creator
@@ -337,25 +331,10 @@ contract VestCore is Ownable {
 		// Take fee proportional to requested withdraw amount before sending
 		uint256 realAfterFeeAmount = _takeFee(tokenWithdrawn, amountBeforeFee);
 
-		console.log(_amountAfterFee);
-		console.log(realAfterFeeAmount);
-
 		// Account for decrease in assets held - will revert if underflow (not enough for withdraw)
+		// Need to use realAfterFeeAmount as _amountAfterFee might be rounded up after fee
 		assetsHeldForVesting[tokenWithdrawn] -= realAfterFeeAmount;
 		// Increase vBoxAcc.withdrawn by (amount sent to user + fee taken)
-
-		// console.log('after fees received:');
-		// console.log(_amountAfterFee);
-		// console.log('withdrawn + fees:');
-		// console.log(amountBeforeFee);
-
-		// console.log('Sanity check 2 - beforeFeeAmnt:');
-		// console.log(amountBeforeFee);
-		// console.log('Sanity check 2 - afterFeeAmnt:');
-		// console.log(_amountAfterFee);
-		// console.log('Sanity check 2 - fee:');
-		// console.log(amountBeforeFee - _amountAfterFee);
-
 		vBoxAccounts[_vBoxId][msg.sender].withdrawn += amountBeforeFee;
 		if (tokenWithdrawn == ETH) {
 			(sent, ) = msg.sender.call{ value: _amountAfterFee }('');
@@ -381,13 +360,6 @@ contract VestCore is Ownable {
 		uint256 afterFeeAmount = calcAfterFeeAmount(_beforeFeeAmount);
 		uint256 feeTaken = _beforeFeeAmount - afterFeeAmount;
 		assetsHeldForVesting[_token] -= feeTaken;
-
-		// console.log('Sanity check 1 - beforeFeeAmnt:');
-		// console.log(_beforeFeeAmount);
-		// console.log('Sanity check 1 - afterFeeAmnt:');
-		// console.log(afterFeeAmount);
-		// console.log('Sanity check 1 - fee:');
-		// console.log(feeTaken);
 
 		emit FeesEarned(_token, feeTaken);
 		return afterFeeAmount;

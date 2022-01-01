@@ -136,34 +136,8 @@ describe("VestCore Scenario Tests", function () {
 
       expectedBalance = withdrawableAmount;
 
-      let contractBal = await TokenInstance.balanceOf(CoreInstance.address);
-      console.log("contract bal: \t\t\t\t", contractBal.toString());
-      console.log(
-        "contract bal less fees: \t\t",
-        contractBal.sub(totalFeeOnAmount(totalAmount)).toString()
-      );
-      console.log(
-        "withdrawable (fees already off): \t",
-        withdrawableAmount.toString()
-      );
-
       // Bob withdraws max withdrawable (half of total)
       await CoreInstance.connect(bob).claimVestedTokens(1, withdrawableAmount);
-
-      contractBal = await TokenInstance.balanceOf(CoreInstance.address);
-      withdrawableAmount = await CoreInstance.getWithdrawableAmount(
-        1,
-        bobAddress
-      );
-      console.log("contract bal: \t\t\t\t", contractBal.toString());
-      console.log(
-        "contract bal less fees: \t\t",
-        contractBal.sub(totalFeeOnAmount(totalAmount)).toString()
-      );
-      console.log(
-        "withdrawable (fees already off): \t",
-        withdrawableAmount.toString()
-      );
 
       // Check amounts again, withdrawable should be close to 0
       bobBalance = await TokenInstance.balanceOf(bobAddress);
@@ -202,18 +176,6 @@ describe("VestCore Scenario Tests", function () {
         expectedWithdrawable.div(constants.DEPLOY.ERR_TOL_DIV)
       );
       expect(vestedAmount).to.equal(totalAmount);
-
-      contractBal = await TokenInstance.balanceOf(CoreInstance.address);
-      console.log("FINAL STEP");
-      console.log("contract bal: \t\t\t\t", contractBal.toString());
-      console.log(
-        "contract bal less fees: \t\t",
-        contractBal.sub(totalFeeOnAmount(totalAmount)).toString()
-      );
-      console.log(
-        "withdrawable (fees already off): \t",
-        withdrawableAmount.toString()
-      );
 
       // Claim rest of tokens
       await CoreInstance.connect(bob).claimVestedTokens(1, withdrawableAmount);
