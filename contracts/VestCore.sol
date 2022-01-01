@@ -245,9 +245,12 @@ contract VestCore is Ownable {
 
 		// Calculate amount forfeited before fee is taken - this gross amount will be reported in event below
 		uint256 amountForfeited = originalAmount - vBoxAcc.amount;
+		// TODO check efficiency - ops might be happening twice
+		uint256 amountForfeitedAfterFee = calcAfterFeeAmount(amountForfeited);
+		uint256 feeOnFortfeited = amountForfeited - amountForfeitedAfterFee;
 
 		// Take fee and calc amount to send back after fee
-		uint256 amountForfeitedAfterFee = _takeFee(vBox.token, amountForfeited);
+		_takeFee(vBox.token, amountForfeited, feeOnFortfeited);
 		assetsHeldForVesting[vBox.token] -= amountForfeitedAfterFee;
 
 		// Send remaining locked tokens back to vBox creator
@@ -329,11 +332,24 @@ contract VestCore is Ownable {
 		uint256 amountBeforeFee = calcBeforeFeeAmount(_amountAfterFee);
 
 		// Take fee proportional to requested withdraw amount before sending
-		_takeFee(tokenWithdrawn, amountBeforeFee);
+		_takeFee(tokenWithdrawn, amountBeforeFee, amountBeforeFee - _amountAfterFee);
 
 		// Account for decrease in assets held - will revert if underflow (not enough for withdraw)
 		assetsHeldForVesting[tokenWithdrawn] -= _amountAfterFee;
 		// Increase vBoxAcc.withdrawn by (amount sent to user + fee taken)
+
+		console.log('after fees received:');
+		console.log(_amountAfterFee);
+		console.log('withdrawn + fees:');
+		console.log(amountBeforeFee);
+
+		console.log('Sanity check 2 - beforeFeeAmnt:');
+		console.log(amountBeforeFee);
+		console.log('Sanity check 2 - afterFeeAmnt:');
+		console.log(_amountAfterFee);
+		console.log('Sanity check 2 - fee:');
+		console.log(amountBeforeFee - _amountAfterFee);
+
 		vBoxAccounts[_vBoxId][msg.sender].withdrawn += amountBeforeFee;
 		if (tokenWithdrawn == ETH) {
 			(sent, ) = msg.sender.call{ value: _amountAfterFee }('');
@@ -351,7 +367,11 @@ contract VestCore is Ownable {
 	}
 
 	// Calculates fee on token and amount, accounts, and returns amount after fee
-	function _takeFee(address _token, uint256 _beforeFeeAmount) internal returns (uint256) {
+	function _takeFee(
+		address _token,
+		uint256 _beforeFeeAmount,
+		uint256 _feeToTake
+	) internal returns (uint256) {
 		// If fee is 0, skip calcs and return whole _beforeFeeAmount
 		if (fee == 0) {
 			return _beforeFeeAmount;
@@ -359,6 +379,13 @@ contract VestCore is Ownable {
 		uint256 afterFeeAmount = calcAfterFeeAmount(_beforeFeeAmount);
 		uint256 feeTaken = _beforeFeeAmount - afterFeeAmount;
 		assetsHeldForVesting[_token] -= feeTaken;
+
+		console.log('Sanity check 1 - beforeFeeAmnt:');
+		console.log(_beforeFeeAmount);
+		console.log('Sanity check 1 - afterFeeAmnt:');
+		console.log(afterFeeAmount);
+		console.log('Sanity check 1 - fee:');
+		console.log(feeTaken);
 
 		emit FeesEarned(_token, feeTaken);
 		return afterFeeAmount;
