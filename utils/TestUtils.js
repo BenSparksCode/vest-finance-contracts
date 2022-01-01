@@ -89,6 +89,10 @@ const afterFee = (beforeFee) => {
     .div(constants.DEPLOY.SCALE);
 };
 
+const totalFeeOnAmount = (beforeFee) => {
+  return beforeFee.mul(constants.DEPLOY.fee).div(constants.DEPLOY.SCALE);
+};
+
 module.exports = {
   currentTime: currentTime,
   fastForward: fastForward,
@@ -96,4 +100,5 @@ module.exports = {
   sendDaiFromWhale: sendDaiFromWhale,
   createBasicVestingBox: createBasicVestingBox,
   afterFee: afterFee,
+  totalFeeOnAmount: totalFeeOnAmount,
 };

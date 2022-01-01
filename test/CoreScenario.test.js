@@ -8,6 +8,7 @@ const {
   sendDaiFromWhale,
   createBasicVestingBox,
   afterFee,
+  totalFeeOnAmount,
 } = require("../utils/TestUtils");
 const { BigNumber } = require("ethers");
 
@@ -139,7 +140,7 @@ describe("VestCore Scenario Tests", function () {
       console.log("contract bal: \t\t\t\t", contractBal.toString());
       console.log(
         "contract bal less fees: \t\t",
-        afterFee(contractBal).toString()
+        contractBal.sub(totalFeeOnAmount(totalAmount)).toString()
       );
       console.log(
         "withdrawable (fees already off): \t",
@@ -157,7 +158,7 @@ describe("VestCore Scenario Tests", function () {
       console.log("contract bal: \t\t\t\t", contractBal.toString());
       console.log(
         "contract bal less fees: \t\t",
-        afterFee(contractBal).toString()
+        contractBal.sub(totalFeeOnAmount(totalAmount)).toString()
       );
       console.log(
         "withdrawable (fees already off): \t",
@@ -192,7 +193,10 @@ describe("VestCore Scenario Tests", function () {
         bobAddress
       );
 
-      expectedWithdrawable = afterFee(totalAmount.sub(expectedBalance));
+      expectedWithdrawable = totalAmount.sub(
+        totalFeeOnAmount(totalAmount).add(expectedBalance)
+      );
+      //   expectedWithdrawable = afterFee(totalAmount.sub(expectedBalance));
       expect(withdrawableAmount).to.be.closeTo(
         expectedWithdrawable,
         expectedWithdrawable.div(constants.DEPLOY.ERR_TOL_DIV)
@@ -200,14 +204,11 @@ describe("VestCore Scenario Tests", function () {
       expect(vestedAmount).to.equal(totalAmount);
 
       contractBal = await TokenInstance.balanceOf(CoreInstance.address);
+      console.log("FINAL STEP");
       console.log("contract bal: \t\t\t\t", contractBal.toString());
       console.log(
         "contract bal less fees: \t\t",
-        contractBal
-          .sub(
-            totalAmount.mul(constants.DEPLOY.fee).div(constants.DEPLOY.SCALE)
-          )
-          .toString()
+        contractBal.sub(totalFeeOnAmount(totalAmount)).toString()
       );
       console.log(
         "withdrawable (fees already off): \t",
@@ -224,7 +225,7 @@ describe("VestCore Scenario Tests", function () {
         bobAddress
       );
 
-      expect(withdrawableAmount).to.be.closeTo(
+      expect(withdrawableAmount).to.be.within(
         0,
         expectedWithdrawable.div(constants.DEPLOY.ERR_TOL_DIV)
       );
