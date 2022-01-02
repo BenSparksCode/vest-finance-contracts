@@ -67,8 +67,14 @@ describe("VestCore Scenario Tests", function () {
   // createVestingBox
   // -----------------
 
+  // SCENARIO TEST 1
+  // - Existing token (TEST)
+  // - 1 recipient (10 TEST)
+  // - 100 day vesting period
+  // - claim half way and at end
+
   describe("Scenarios", function () {
-    it.only("Existing token, 1 recipient, 100 day vest, 2 claims", async () => {
+    it("SCEN 1 - Existing token, 1 recipient, 100 day vest, 2 claims", async () => {
       // Creator: Alice
       // Recipients: Bob
       // Check balances halfway (50 days) and at end (100 days)
@@ -193,6 +199,41 @@ describe("VestCore Scenario Tests", function () {
       );
       expect(vestedAmount).to.equal(totalAmount);
       expect(bobBalance).to.equal(afterFee(totalAmount));
+    });
+
+    // SCENARIO TEST 2
+    // - ETH vesting
+    // - 5 recipients (100 ETH each)
+    // - 100, 200, 300, 400, 500 day vesting periods
+    // - Each recipient claims every 100 days
+
+    it("SCEN 2 - ETH, 5 recipients, 100 - 500 day vests, claims every 100 days", async () => {
+      // TODO
+    });
+
+    // SCENARIO TEST 3
+    // - New token (TEST2)
+    // - 3 recipients (100 TEST2 each)
+    // - 300 day vesting periods each
+    // - All accounts removed at 200 days
+    // - Recipient 1 claims at 100 days, recipient 2 at 200 days, recipient 3 never
+    // - All recipients can claim vested amount after removal
+    // - Non-vested amount is returned to admin
+
+    it("SCEN 3 - New Token, 3 recipients, all acounts removed before end", async () => {
+      // TODO
+    });
+
+    // SCENARIO TEST 4
+    // - ETH
+    // - 2 recipients (100 ETH each)
+    // - 1 year vesting periods
+    // - Recipient 1 removed and Recipient 3 added at 6 months
+    // - All 3 recipients only claim at end of vesting
+    // - Non-vested amount for Recipient 1 is returned to admin
+
+    it("SCEN 4 - ETH, 3 recipients, 1 year vesting, 1 removed, 1 added at 6 months", async () => {
+      // TODO
     });
   });
 });
